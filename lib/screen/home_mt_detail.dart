@@ -318,14 +318,11 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
-                  // 길찾기 버튼 클릭 콜백
-                  onPressed:  () {
-                    selectedMountain = allMountains!.firstWhere(
-                          (element) => element['mount_name'] == widget.mountainName,
-                      orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
-                    );
-                    selectedSpots = spots;
-                    selectedTrail = trail;
+                  onPressed: () {
+                    // 길찾기 관련 변수 설정
+                    var selectedTrailIdx = trainIdx;
+                    var selectedTrailPath = trailPath;
+
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
