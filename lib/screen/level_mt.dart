@@ -14,11 +14,11 @@ class _LevelMtState extends State<LevelMt> {
   List<bool> _isOpenList = [];
 
   final List<Map<String, String>> courseDetails = [
-    {'mountain': '북한산', 'difficulty': '쉬움', 'time': '1시간', 'distance': '2.5km'},
-    {'mountain': '남산', 'difficulty': '보통', 'time': '1시간 30분', 'distance': '3.0km'},
-    {'mountain': '지리산', 'difficulty': '어려움', 'time': '2시간', 'distance': '4.5km'},
-    {'mountain': '설악산', 'difficulty': '쉬움', 'time': '45분', 'distance': '1.5km'},
-    {'mountain': '한라산', 'difficulty': '보통', 'time': '2시간 30분', 'distance': '5.0km'},
+    {'mountain': '북한산', 'difficulty': '쉬움', 'distance': '2.5km'},
+    {'mountain': '남산', 'difficulty': '보통', 'distance': '3.0km'},
+    {'mountain': '지리산', 'difficulty': '어려움', 'distance': '4.5km'},
+    {'mountain': '설악산', 'difficulty': '쉬움', 'distance': '1.5km'},
+    {'mountain': '한라산', 'difficulty': '보통', 'distance': '5.0km'},
   ];
 
   final List<List<String>> subCourses = [
@@ -174,26 +174,28 @@ class _LevelMtState extends State<LevelMt> {
                   if (courseInfo != null) ...[
                     Row(
                       children: [
-                        Text(
-                          '🚩 ${courseInfo['difficulty'] ?? ''}',
-                          style: TextStyle(
-                              fontSize: screenWidth * 0.04, color: Colors.black),
+                        Flexible(
+                          child: Text(
+                            '🚩 ${courseInfo['difficulty'] ?? ''}',
+                            style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                color: Colors.black),
+                            overflow: TextOverflow.visible,
+                          ),
                         ),
                       ],
                     ),
                     SizedBox(height: 4),
                     Row(
                       children: [
-                        Text(
-                          '⏱ ${courseInfo['time'] ?? ''}',
-                          style: TextStyle(
-                              fontSize: screenWidth * 0.04, color: Colors.black),
-                        ),
-                        SizedBox(width: 10),
-                        Text(
-                          '🏃‍♂️ ${courseInfo['distance'] ?? ''}',
-                          style: TextStyle(
-                              fontSize: screenWidth * 0.04, color: Colors.black),
+                        Flexible(
+                          child: Text(
+                            '🏃‍♂️ ${courseInfo['distance'] ?? ''}',
+                            style: TextStyle(
+                                fontSize: screenWidth * 0.04,
+                                color: Colors.black),
+                            overflow: TextOverflow.visible,
+                          ),
                         ),
                       ],
                     ),
@@ -256,7 +258,8 @@ class _LevelMtState extends State<LevelMt> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () => _showImagePopup(context, 'https://via.placeholder.com/400'),
+            onTap: () =>
+                _showImagePopup(context, 'https://via.placeholder.com/400'),
             child: Container(
               width: 90,
               height: 120,
@@ -323,7 +326,8 @@ class _LevelMtState extends State<LevelMt> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
+                padding:
+                const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
@@ -335,7 +339,8 @@ class _LevelMtState extends State<LevelMt> {
                   ),
                   child: Text(
                     '닫기',
-                    style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                    style: TextStyle(
+                        color: Colors.white, fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
