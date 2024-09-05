@@ -299,8 +299,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 child: ElevatedButton(
                   onPressed: () {
                     // 길찾기 관련 변수 설정
-                    selectedTrailIdx = trainIdx;
-                    selectedTrailPath = trailPath;
+                    var selectedTrailIdx = trainIdx;
+                    var selectedTrailPath = trailPath;
 
                     Navigator.pushAndRemoveUntil(
                       context,
