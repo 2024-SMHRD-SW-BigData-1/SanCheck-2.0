@@ -228,8 +228,6 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                     SizedBox(height: 4),
                     Row(
                       children: [
-
-                        SizedBox(width: 10),
                         Text(
                           '🏃‍♂️ ${courseInfo['trail_distance'] ?? ''}',
                           style: TextStyle(fontSize: screenWidth * 0.04,
