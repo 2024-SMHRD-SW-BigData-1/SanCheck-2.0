@@ -87,12 +87,12 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.015), // 간격을 줄임
+                SizedBox(height: screenHeight * 0.015),
                 Container(
                   height: screenHeight * 0.4,
                   child: GpxNavigation(),
                 ),
-                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
+                SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: '인기있는 산',
                   items: ["북한산", "남산"],
@@ -105,7 +105,7 @@ class _HomeState extends State<Home> {
                     mountainName: selectedItem,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
+                SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: "관심있는 산",
                   items: ["북한산", "남산", "지리산"],
@@ -118,7 +118,7 @@ class _HomeState extends State<Home> {
                     mountainName: selectedItem,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
+                SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: "난이도별 코스",
                   items: ["쉬움", "보통", "어려움"],

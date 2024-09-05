@@ -51,7 +51,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       List<dynamic> trails = await _trailService.selectTrail(widget.mountainName);
       if(trails.isEmpty){
         return;
-      }else{
+      } else {
         setState(() {
           _trails = trails;
           _isOpenList = List.generate(_trails.length, (index) => false);
@@ -61,7 +61,6 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         await _initializeData(); // 데이터를 초기화하는 메서드 호출
 
       }
-
     } catch (e) {
       print("Error fetching all mountains: $e");
       setState(() {
@@ -72,26 +71,20 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
 
   Future<void> _selectSpot() async {
     try {
-      // 스팟 리스트를 저장할 리스트 생성
       List<List<dynamic>> allSpots = [];
-
-      // 각 등산로에 대해 스팟 데이터를 가져옴
       for (var trail in _trails) {
-        int trailIdx = trail['trail_idx']; // 각 등산로의 ID를 가져옴
+        int trailIdx = trail['trail_idx'];
         List<dynamic> spots = await _trailService.selectSpotsByTrailId(trailIdx);
-
-        // 가져온 스팟 리스트를 추가
         allSpots.add(spots);
       }
       if(allSpots.isEmpty){
         _isLoading = false;
         return;
-      }else{
+      } else {
         setState(() {
           _spots = allSpots;
         });
       }
-
     } catch (e) {
       print("Error fetching spots: $e");
       setState(() {
@@ -135,7 +128,6 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       );
 
 
-
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
       appBar: AppBar(
@@ -154,8 +146,6 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: Column(
           children: [
-            
-            // 산 이름, 별 버튼
             _buildStyledButton(
               widget.mountainName,
               trailingIcon: _containsMountIdx
@@ -174,8 +164,6 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               },
             ),
             SizedBox(height: 20),
-            
-            // 코스 나열(세부코스 아님)
             Expanded(
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(vertical: 10),
@@ -189,21 +177,16 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                         trailingIcon: _isOpenList[index]
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
-                        // Map<> 구조
                         courseInfo: _trails[index],
-                        // 클릭 시 _isOpenList 토글
                         onPressed: () {
                           setState(() {
                             _isOpenList[index] = !_isOpenList[index];
                           });
                         },
-                        hasRouteButton: true, // 길찾기 버튼이 있는지 여부
-                        trail: _trails[index], // 선택된 등산로 가져가기
-                        spots: _spots[index],
+                        hasRouteButton: true,
+                        trailPath: _trails[index]['trail_path'],
+                        trainIdx: _trails[index]['trail_idx'],
                       ),
-
-
-                      // 세부코스(spot)
                       AnimatedContainer(
                         duration: Duration(milliseconds: 300),
                         height: _isOpenList[index]
@@ -232,41 +215,39 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
     );
   }
 
-  Widget _buildStyledButton(String text,
-      {IconData? trailingIcon,
+  Widget _buildStyledButton(
+      String text, {
+        IconData? trailingIcon,
         Map<String, dynamic>? courseInfo,
         VoidCallback? onTrailingIconPressed,
         VoidCallback? onPressed,
         bool hasRouteButton = false,
-        Map<String, dynamic>? trail,
-        List<dynamic>? spots
+        int? trainIdx,
+        List<dynamic>? trailPath,
       }) {
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
       width: screenWidth * 0.92,
       child: TextButton(
         onPressed: onPressed,
         style: ButtonStyle(
-          backgroundColor: WidgetStateProperty.all(Colors.white),
-          padding: WidgetStateProperty.all(
+          backgroundColor: MaterialStateProperty.all(Colors.white),
+          padding: MaterialStateProperty.all(
             EdgeInsets.symmetric(
               vertical: screenWidth * 0.04,
               horizontal: screenWidth * 0.06,
             ),
           ),
-          shape: WidgetStateProperty.all(
+          shape: MaterialStateProperty.all(
             RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(12),
               side: BorderSide(color: Colors.grey.shade300),
             ),
           ),
-          overlayColor: WidgetStateProperty.resolveWith<Color?>(
-                (Set<WidgetState> states) {
-              if (states.contains(WidgetState.pressed)) {
+          overlayColor: MaterialStateProperty.resolveWith<Color?>(
+                (Set<MaterialState> states) {
+              if (states.contains(MaterialState.pressed)) {
                 return Color(0x3F000000);
               }
               return null;
@@ -276,6 +257,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
+            // Expanded를 사용해 텍스트가 버튼과 겹치지 않도록 함
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -290,50 +272,42 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                   ),
                   SizedBox(height: 8),
                   if (courseInfo != null) ...[
-                    Row(
-                      children: [
-                        Text(
-                          '🚩 ${courseInfo['trail_name'] ?? ''}',
-                          style: TextStyle(fontSize: screenWidth * 0.04,
-                              color: Colors.black),
-                        ),
-                      ],
+                    Text(
+                      '🚩 ${courseInfo['trail_name'] ?? ''}',
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.04,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.visible,
                     ),
                     SizedBox(height: 4),
-                    Row(
-                      children: [
-                        Text(
-                          '🏃‍♂️ ${courseInfo['trail_distance'] ?? ''}',
-                          style: TextStyle(fontSize: screenWidth * 0.04,
-                              color: Colors.black),
-                        ),
-                      ],
+                    Text(
+                      '🏃‍♂️ ${courseInfo['trail_distance'] ?? ''}',
+                      style: TextStyle(
+                        fontSize: screenWidth * 0.04,
+                        color: Colors.black,
+                      ),
+                      overflow: TextOverflow.visible,
                     ),
                   ],
                 ],
               ),
             ),
-
-            // 길찾기 버튼
             if (hasRouteButton)
               Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
-                  
-                  // 길찾기 버튼 클릭 콜백
-                  onPressed:  () async{
-                    selectedMountain = allMountains!.firstWhere(
-                          (element) => element['mount_name'] == widget.mountainName,
-                      orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
-                    );
-                    selectedSpots = spots;
-                    selectedTrail = trail;
+                  onPressed: () {
+                    // 길찾기 관련 변수 설정
+                    selectedTrailIdx = trainIdx;
+                    selectedTrailPath = trailPath;
+
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
                         builder: (context) => LoginSuccess(selectedIndex: 0),
                       ),
-                          (Route<dynamic> route) => false, // 모든 이전 화면을 제거
+                          (Route<dynamic> route) => false,
                     );
                   },
                   style: ElevatedButton.styleFrom(
@@ -354,7 +328,12 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               ),
             if (trailingIcon != null)
               IconButton(
-                icon: Icon(trailingIcon, color: Colors.black),
+                icon: Icon(
+                  trailingIcon,
+                  color: trailingIcon == Icons.star || trailingIcon == Icons.star_border
+                      ? Colors.orange
+                      : Colors.black, // 별 아이콘만 노란색으로 설정, 나머지는 기본 색상
+                ),
                 onPressed: onTrailingIconPressed,
                 constraints: BoxConstraints(),
                 padding: EdgeInsets.zero,
@@ -365,18 +344,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
     );
   }
 
-
-
-
-
-
-
   Widget _buildSubCourseItem(Map<String, dynamic> subCourse) {
-    // print('서브코스 $subCourse');
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
       margin: EdgeInsets.symmetric(vertical: 8),
@@ -396,9 +365,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       child: Row(
         children: [
           GestureDetector(
-            onTap: () =>
-                _showImagePopup(context,
-                    'https://via.placeholder.com/400'),
+            onTap: () => _showImagePopup(context, 'https://via.placeholder.com/400'),
             child: Container(
               width: 90,
               height: 120,
@@ -465,12 +432,11 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 ),
               ),
               Padding(
-                padding: const EdgeInsets.symmetric(
-                    vertical: 10, horizontal: 16),
+                padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(context),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.green, // 초록색으로 변경
+                    backgroundColor: Colors.green,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),

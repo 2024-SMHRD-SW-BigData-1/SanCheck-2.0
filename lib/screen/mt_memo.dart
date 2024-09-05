@@ -20,10 +20,17 @@ class _MtMemoState extends State<MtMemo> {
   List<Map<String, dynamic>> subCourses = [
     {
       'description': '세부 코스 설명이 여기에 나옵니다.',
-      'image': 'https://via.placeholder.com/90',
+      'imageUrl': 'https://via.placeholder.com/90',
       'difficulty': '쉬움\n',
       'time': '1시간\n',
       'distance': '2.5km',
+    },
+    {
+      'description': '세부 코스 설명이 여기에 나옵니다.',
+      'imageUrl': '', // 이미지가 없는 경우
+      'difficulty': '보통\n',
+      'time': '2시간\n',
+      'distance': '3.0km',
     }
   ];
 
@@ -54,7 +61,7 @@ class _MtMemoState extends State<MtMemo> {
             String name = courseDetails[index]['name'] ?? '알 수 없는 산';
             String date = courseDetails[index]['date'] ?? '날짜 없음';
             return GestureDetector(
-              onLongPress: () => _showDeleteConfirmation(context, index), // 삭제 확인 팝업 호출
+              onLongPress: () => _showDeleteConfirmation(context, index),
               child: Column(
                 children: [
                   _buildCourseButton(
@@ -73,7 +80,8 @@ class _MtMemoState extends State<MtMemo> {
                     duration: Duration(milliseconds: 300),
                     curve: Curves.easeInOut,
                     child: _isExpandedList[index]
-                        ? _buildSubCourseItem(subCourses[0])
+                        ? _buildSubCourseItem(
+                        subCourses[index % subCourses.length], screenWidth)
                         : SizedBox(),
                   ),
                 ],
@@ -82,27 +90,32 @@ class _MtMemoState extends State<MtMemo> {
           },
         ),
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showAddCourseModal(context),
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        child: Container(
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 10,
-                offset: Offset(0, 4),
+      floatingActionButton: ClipOval(
+        child: Material(
+          color: Colors.transparent, // 투명하게 설정
+          child: InkWell(
+            splashColor: Colors.grey.withOpacity(0.2), // 클릭 시 효과 색상
+            onTap: () => _showAddCourseModal(context),
+            child: Container(
+              padding: EdgeInsets.all(12), // 패딩을 통해 버튼 크기 조정
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withOpacity(0.1),
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
               ),
-            ],
-          ),
-          child: CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Image.network(
-              'https://img.icons8.com/color/96/add--v1.png',
-              width: 32,
-              height: 32,
+              child: CircleAvatar(
+                backgroundColor: Colors.white,
+                child: Image.network(
+                  'https://img.icons8.com/color/96/add--v1.png',
+                  width: 32,
+                  height: 32,
+                ),
+              ),
             ),
           ),
         ),
@@ -110,9 +123,11 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 코스 버튼 위젯
+  // 코스 버튼 위젯 생성 함수
   Widget _buildCourseButton(String title,
-      {required String subtitle, IconData? trailingIcon, VoidCallback? onPressed}) {
+      {required String subtitle,
+        IconData? trailingIcon,
+        VoidCallback? onPressed}) {
     final screenWidth = MediaQuery.of(context).size.width;
 
     return Container(
@@ -179,9 +194,10 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 세부 코스 항목 생성 함수
-  Widget _buildSubCourseItem(Map<String, dynamic> subCourse) {
+  // 수정된 세부 코스 항목 생성 함수
+  Widget _buildSubCourseItem(Map<String, dynamic> subCourse, double screenWidth) {
     return Container(
+      width: screenWidth * 0.92,
       margin: EdgeInsets.symmetric(vertical: 8),
       padding: EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -198,53 +214,94 @@ class _MtMemoState extends State<MtMemo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          GestureDetector(
-            onTap: () => _showImagePopup(context, subCourse['image']),
-            child: Container(
-              width: double.infinity,
-              height: 120,
+          // 이미지가 있을 경우에만 표시
+          if (subCourse['imageUrl'] != null &&
+              subCourse['imageUrl'].isNotEmpty &&
+              Uri.tryParse(subCourse['imageUrl']) != null)
+            Container(
+              margin: EdgeInsets.only(bottom: 8),
+              height: 150,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: DecorationImage(
-                  image: NetworkImage(subCourse['image']),
+                  image: NetworkImage(subCourse['imageUrl']),
                   fit: BoxFit.cover,
+                  onError: (exception, stackTrace) {
+                    print('Error loading image: $exception'); // 이미지 로드 오류 처리
+                  },
                 ),
               ),
-            ),
-          ),
-          SizedBox(height: 10),
-          Text(
-            subCourse['description'],
-            style: TextStyle(
-              fontSize: 16,
-              color: Colors.black87,
+            )
+          else
+            SizedBox(height: 50, child: Center(child: Text('저장된 등산 기록 이미지가 없습니다.'))),
+          // 코스명 표시
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '🚩 코스명: ',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                TextSpan(
+                  text: subCourse['difficulty'],
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
             ),
           ),
           SizedBox(height: 8),
-          Row(
-            children: [
-              Text(
-                '🚩 난이도: ${subCourse['difficulty']}',
-                style: TextStyle(fontSize: 16, color: Colors.black),
-              ),
-              SizedBox(width: 10),
-              Text(
-                '⏱ 시간: ${subCourse['time']}',
-                style: TextStyle(fontSize: 16, color: Colors.black),
-              ),
-              SizedBox(width: 10),
-              Text(
-                '🏃‍♂️ 거리: ${subCourse['distance']}',
-                style: TextStyle(fontSize: 16, color: Colors.black),
-              ),
-            ],
+          // 시간 표시
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '⏱ 시간: ',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                TextSpan(
+                  text: subCourse['time'],
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          SizedBox(height: 8),
+          // 거리 표시
+          RichText(
+            text: TextSpan(
+              children: [
+                TextSpan(
+                  text: '🏃‍♂️ 거리: ',
+                  style: TextStyle(fontSize: 16, color: Colors.black),
+                ),
+                TextSpan(
+                  text: subCourse['distance'],
+                  style: TextStyle(
+                    fontSize: 16,
+                    color: Colors.black,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
     );
   }
 
-// 삭제 확인 팝업
+
+
+
+  // 삭제 확인 팝업 호출 함수
   void _showDeleteConfirmation(BuildContext context, int index) {
     showDialog(
       context: context,
@@ -289,7 +346,8 @@ class _MtMemoState extends State<MtMemo> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       ),
                       child: Text(
                         '취소',
@@ -305,7 +363,7 @@ class _MtMemoState extends State<MtMemo> {
                           courseDetails.removeAt(index);
                           _isExpandedList.removeAt(index);
                         });
-                        Navigator.of(context).pop(); // 팝업 닫기
+                        Navigator.of(context).pop();
                       },
                       style: ElevatedButton.styleFrom(
                         foregroundColor: Colors.white,
@@ -313,7 +371,8 @@ class _MtMemoState extends State<MtMemo> {
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        padding: EdgeInsets.symmetric(vertical: 12, horizontal: 20),
+                        padding:
+                        EdgeInsets.symmetric(vertical: 12, horizontal: 20),
                       ),
                       child: Text(
                         '삭제',
@@ -381,7 +440,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 코스 추가 모달 호출 (팝업창으로 변경)
+  // 코스 추가 모달 호출 함수
   void _showAddCourseModal(BuildContext context) {
     showDialog(
       context: context,
@@ -396,7 +455,7 @@ class _MtMemoState extends State<MtMemo> {
               setState(() {
                 courseDetails.add({
                   'name': name,
-                  'date': date.toString(), // DateTime을 String으로 변환하여 저장
+                  'date': date.toString(),
                 });
                 _isExpandedList.add(false);
               });
