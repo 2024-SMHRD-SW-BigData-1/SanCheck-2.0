@@ -24,7 +24,7 @@ class GpxNavigationState extends State<GpxNavigation> {
 
   NCameraPosition _cameraPosition = const NCameraPosition(
     target: NLatLng(37.5665, 126.978), // 서울 시청
-    zoom: 20,
+    zoom: 10,
     bearing: 0,
     tilt: 0,
   );
@@ -97,8 +97,7 @@ class GpxNavigationState extends State<GpxNavigation> {
         // mountain은 배열 안의 각 객체(산 정보)를 나타냅니다.
         final marker = NMarker(
           id: mountain['mount_idx'].toString(), // 마커의 고유 ID
-          position:
-          NLatLng(double.parse(mountain['mount_latitude']),double.parse(mountain['mount_longitude'])), // 마커의 위치 설정
+          position: NLatLng(double.parse(mountain['mount_latitude']),double.parse(mountain['mount_longitude'])), // 마커의 위치 설정
           size: Size(20, 25), // 마커의 크기 설정
           caption: NOverlayCaption(text: mountain['mount_name']),
           subCaption: NOverlayCaption(text: mountain['mount_detail'] ?? '', color: Colors.grey),

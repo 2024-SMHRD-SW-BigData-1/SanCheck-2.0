@@ -3,6 +3,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:location/location.dart';
+import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
 import 'package:sancheck/screen/weather.dart';
@@ -36,6 +37,7 @@ class _HikeState extends State<Hike> {
   bool _isPaused = false;
   Timer? _timer;
   ValueNotifier<int> _secondsNotifier = ValueNotifier<int>(0);
+  List<NLatLng> _coords = [];
 
 
   @override
@@ -48,10 +50,13 @@ class _HikeState extends State<Hike> {
 
 Future<void> _initialize() async{
   WidgetsFlutterBinding.ensureInitialized();
+
   final LocationData currentLocation = await location.getLocation();
 
   double nx = (currentLocation.latitude!);
   double ny = (currentLocation.longitude!);
+
+
 
   _cameraPosition = NCameraPosition(
   target: NLatLng(nx, ny),
@@ -85,7 +90,46 @@ Future<void> _initialize() async{
     }
   }
   await _loadTimerValue();  // 앱 시작 시 저장된 타이머 값 불러오기
+
+
+  // 경로 정보 set
+  setState(() {
+    _coords = selectedTrail!['trail_path']!.map<NLatLng>((point) {
+      return NLatLng(point['x'], point['y']);
+    }).toList();
+  });
+
 }
+
+// spot을 지도에 추가하는 함수
+  Future<void> addSpotsToMap(controller) async {
+    if (selectedSpots!.isEmpty || selectedSpots==null){
+      return;
+    }
+    NOverlayImage image =  await NOverlayImage.fromWidget(widget: Icon(Icons.add_alert), size: Size(5.0, 5.0), context: context);
+    // 맵 컨트롤러가 준비된 후 마커를 추가하도록 수정
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      selectedSpots!.forEach((spot) {
+        // mountain은 배열 안의 각 객체(산 정보)를 나타냅니다.
+        final marker = NMarker(
+          id: spot['spot_idx'].toString(), // 스팟의 고유 ID
+          icon: image,
+          position: NLatLng(double.parse(spot['spot_latitude']),double.parse(spot['spot_longitude'])), // 마커의 위치 설정
+          size: Size(20, 25), // 마커의 크기 설정
+          caption: NOverlayCaption(text: spot['spot_name'], textSize: 12.0),
+          isHideCollidedSymbols: true,
+        );
+
+        // 마커를 지도에 추가
+        controller.addOverlay(marker);
+        marker.setOnTapListener(
+                (NMarker marker)=>{
+              print("마커 클릭됨"),
+            }
+        );
+      });
+    });
+  }
 
 
   Future<void> _initializeNaverMapSdk() async {
@@ -259,7 +303,17 @@ Future<void> _initialize() async{
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_isTracking)
+                  if(selectedTrail!=null && !_isTracking)
+                        Text(
+                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                  if(selectedTrail==null && !_isTracking)
+                    Text(
+                      '선택된 등산로: 없음 ',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  if (selectedTrail==null && _isTracking)
                     Row(
                       children: [
                         Text(
@@ -277,11 +331,52 @@ Future<void> _initialize() async{
                         ),
                       ],
                     ),
+                  if(selectedTrail!=null && _isTracking)
+                    Column(
+                      children: [
+                        Text(
+                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              '경과 시간: ',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            ValueListenableBuilder<int>(
+                              valueListenable: _secondsNotifier,
+                              builder: (context, seconds, child) {
+                                return Text(
+                                  _formatTime(seconds),
+                                  style: TextStyle(fontSize: 16),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                 ],
               ),
               backgroundColor: Colors.grey[200],
               elevation: 0,
               foregroundColor: Colors.black,
+              actions: selectedTrail != null && !_isTracking
+                  ? [
+                IconButton(
+                  icon: Icon(Icons.dangerous),
+                  onPressed: () {
+                    setState(() {
+                      selectedTrail = null;
+                      selectedMountain = null;
+                      selectedSpots = null;
+                      _coords= [];
+                    });
+                  },
+                ),
+              ]
+                  : [],
             ),
             body: Stack(
               children: [
@@ -293,7 +388,7 @@ Future<void> _initialize() async{
                     locationButtonEnable: true,
                     logoClickEnable: false,
                     minZoom: 5, // default is 0
-                    maxZoom: 17, // default is 21
+                    maxZoom: 18, // default is 21
                     extent: const NLatLngBounds(
                       southWest: NLatLng(31.43, 122.37),
                       northEast: NLatLng(44.35, 132.0),
@@ -303,6 +398,26 @@ Future<void> _initialize() async{
                     print("등산하기 맵 로딩 완료");
                     NLocationTrackingMode mode = NLocationTrackingMode.follow;
                     controller.setLocationTrackingMode(mode);
+
+                    // 경로가 있는 경우 NPathOverlay를 추가
+                    if (_coords.isNotEmpty && selectedSpots!=null) {
+                      var route = NPathOverlay(
+                        id: '$selectedTrail["trail_idx"]',
+                        coords: _coords,
+                        color: Colors.blue,
+                        width: 5,
+                      );
+                      controller.addOverlay(route);
+
+                      addSpotsToMap(controller);
+
+                      controller.updateCamera(NCameraUpdate.withParams(
+                        target: NLatLng(double.parse(selectedMountain!['mount_latitude']), double.parse(selectedMountain!['mount_longitude'])),
+                        zoom: 11,
+                        bearing: 0,
+                        tilt: 0
+                      ));
+                    }
                   },
                 ),
                 Positioned(
