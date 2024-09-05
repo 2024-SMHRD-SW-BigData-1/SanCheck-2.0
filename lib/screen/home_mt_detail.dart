@@ -184,8 +184,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                           });
                         },
                         hasRouteButton: true,
-                        trailPath: _trails[index]['trail_path'],
-                        trainIdx: _trails[index]['trail_idx'],
+                        trail: _trails[index], // 선택된 등산로 가져가기
+                        spots: _spots[index],
                       ),
                       AnimatedContainer(
                         duration: Duration(milliseconds: 300),
@@ -222,8 +222,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         VoidCallback? onTrailingIconPressed,
         VoidCallback? onPressed,
         bool hasRouteButton = false,
-        int? trainIdx,
-        List<dynamic>? trailPath,
+        Map<String, dynamic>? trail,
+        List<dynamic>? spots
       }) {
     final screenWidth = MediaQuery.of(context).size.width;
 
@@ -297,11 +297,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
-                  onPressed: () {
-                    // 길찾기 관련 변수 설정
-                    var selectedTrailIdx = trainIdx;
-                    var selectedTrailPath = trailPath;
-
+                  // 길찾기 버튼 클릭 콜백
+                  onPressed:  () async{
+                    selectedMountain = allMountains!.firstWhere(
+                          (element) => element['mount_name'] == widget.mountainName,
+                      orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
+                    );
+                    selectedSpots = spots;
+                    selectedTrail = trail;
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
