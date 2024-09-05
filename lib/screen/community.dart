@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'community_post.dart';
 
@@ -12,6 +13,7 @@ class _CommunityState extends State<Community> {
   List<TextEditingController> _commentControllers = []; // 각 게시물에 대한 댓글 입력 컨트롤러 리스트
   int _selectedCategory = 0; // 선택된 카테고리 상태
 
+  // 게시글 업로드
   void _showPostDialog(BuildContext context) async {
     final newPost = await showDialog<Map<String, dynamic>>(
       context: context,
@@ -33,6 +35,14 @@ class _CommunityState extends State<Community> {
         _commentControllers.insert(0, TextEditingController());
       });
     }
+
+    Dio dio = Dio();
+
+    String url = "localhost:8000/community/upload";
+
+    dio.post(url, data: {
+
+    });
   }
 
 
@@ -173,7 +183,7 @@ class _CommunityState extends State<Community> {
                         _buildCategoryButton(1),
                       ],
                     ),
-                    GestureDetector(
+                    GestureDetector(    // 게시물 추가 버튼
                       onTap: () => _showPostDialog(context),
                       child: Container(
                         padding: EdgeInsets.all(8),
