@@ -7,3 +7,5 @@ import 'package:sancheck/model/user_model.dart';
 // 사용자 정보를 저장할 전역 변수
 UserModel? userModel;
 List<dynamic>? allMountains;
+int? selectedTrailIdx;
+List<dynamic>? selectedTrailPath;

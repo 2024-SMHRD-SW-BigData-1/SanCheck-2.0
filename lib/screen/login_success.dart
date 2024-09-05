@@ -92,6 +92,7 @@ class _LoginSuccessState extends State<LoginSuccess> {
 
   @override
   Widget build(BuildContext context) {
+
     return Scaffold(
       appBar: AppBar(
         title: Text(_getAppBarTitle(), style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)), // 현재 선택된 페이지에 따른 제목

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/service/trail_service.dart';
 
@@ -16,22 +17,24 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   Set<String> favoriteItems = {};
   List<bool> _isOpenList = [];
   List<dynamic> _trails = [];
+  List<List<dynamic>> _spots = [];
+  bool _isLoading = true;
 
-  final List<Map<String, String>> courseDetails = [
-    {'difficulty': '쉬움', 'time': '1시간', 'distance': '2.5km'},
-    {'difficulty': '보통', 'time': '1시간 30분', 'distance': '3.0km'},
-    {'difficulty': '어려움', 'time': '2시간', 'distance': '4.5km'},
-    {'difficulty': '쉬움', 'time': '45분', 'distance': '1.5km'},
-    {'difficulty': '보통', 'time': '2시간 30분', 'distance': '5.0km'},
-  ];
+  // final List<Map<String, String>> courseDetails = [
+  //   {'difficulty': '쉬움', 'time': '1시간', 'distance': '2.5km'},
+  //   {'difficulty': '보통', 'time': '1시간 30분', 'distance': '3.0km'},
+  //   {'difficulty': '어려움', 'time': '2시간', 'distance': '4.5km'},
+  //   {'difficulty': '쉬움', 'time': '45분', 'distance': '1.5km'},
+  //   {'difficulty': '보통', 'time': '2시간 30분', 'distance': '5.0km'},
+  // ];
 
-  final List<List<String>> subCourses = [
-    ['1', '2', '3', '4', '5'],
-    ['1', '2', '3'],
-    ['1', '2', '3', '4'],
-    ['1', '2'],
-    ['1', '2', '3', '4', '5', '6']
-  ];
+  // final List<List<String>> subCourses = [
+  //   ['1', '2', '3', '4', '5'],
+  //   ['1', '2', '3'],
+  //   ['1', '2', '3', '4'],
+  //   ['1', '2'],
+  //   ['1', '2', '3', '4', '5', '6']
+  // ];
 
   @override
   void initState() {
@@ -50,12 +53,55 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         setState(() {
           _trails = trails;
         });
-        print(_trails);
+
+        await _selectSpot();
+
         _isOpenList = List.generate(_trails.length, (index) => false);
+
+
       }
 
     } catch (e) {
       print("Error fetching all mountains: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
+  Future<void> _selectSpot() async {
+    try {
+      // 스팟 리스트를 저장할 리스트 생성
+      List<List<dynamic>> allSpots = [];
+
+      // 각 등산로에 대해 스팟 데이터를 가져옴
+      for (var trail in _trails) {
+        int trailIdx = trail['trail_idx']; // 각 등산로의 ID를 가져옴
+        List<dynamic> spots = await _trailService.selectSpotsByTrailId(trailIdx);
+
+        // 가져온 스팟 리스트를 추가
+        allSpots.add(spots);
+      }
+
+      // 가져온 스팟 리스트 출력 (테스트용)
+      print(allSpots);
+
+      if(allSpots.isEmpty){
+        return;
+      }else{
+        setState(() {
+          _spots = allSpots;
+          _isLoading = false;
+        });
+      }
+      // 필요에 따라 상태에 추가
+
+
+    } catch (e) {
+      print("Error fetching spots: $e");
+      setState(() {
+        _isLoading = false;
+      });
     }
   }
 
@@ -65,6 +111,23 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   @override
   Widget build(BuildContext context) {
 
+    if(_isLoading){
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('${widget.mountainName} 코스 리스트'),
+          centerTitle: true,
+          backgroundColor: Colors.white,
+          elevation: 0,
+          iconTheme: IconThemeData(color: Colors.black),
+          titleTextStyle: TextStyle(
+            color: Colors.black,
+            fontSize: 20,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     final screenWidth = MediaQuery
         .of(context)
@@ -108,7 +171,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
             ),
             SizedBox(height: 20),
             
-            // 등산로 코스 나열(세부코스 아님)
+            // 코스 나열(세부코스 아님)
             Expanded(
               child: ListView.separated(
                 padding: EdgeInsets.symmetric(vertical: 10),
@@ -118,34 +181,40 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                   return Column(
                     children: [
                       _buildStyledButton(
-                        '${_trails[index]['trail_name']}',
+                        '코스 ${index + 1}',
                         trailingIcon: _isOpenList[index]
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
 
                         // Map<> 구조
                         courseInfo: _trails[index],
+                        
+                        // 클릭 시 _isOpenList 토글
                         onPressed: () {
                           setState(() {
                             _isOpenList[index] = !_isOpenList[index];
                           });
                         },
                         hasRouteButton: true, // 길찾기 버튼이 있는지 여부
+                        trailPath: _trails[index]['trail_path'],
+                        trainIdx: _trails[index]['trail_idx'],
                       ),
 
-                      // _isOpenList가 true일 때 밑에 뜨는 세부코스(spot)
+
+                      // 세부코스(spot)
                       AnimatedContainer(
                         duration: Duration(milliseconds: 300),
-                        height: _isOpenList[index] ? subCourses[index].length *
-                            120.0 : 0,
+                        height: _isOpenList[index]
+                            ? _spots[index].length * 120.0
+                            : 0,
                         child: _isOpenList[index]
                             ? ListView.builder(
                           physics: NeverScrollableScrollPhysics(),
                           shrinkWrap: true,
-                          itemCount: subCourses[index].length,
+                          itemCount: _spots[index].length,
                           itemBuilder: (context, subIndex) {
                             return _buildSubCourseItem(
-                                subCourses[index][subIndex]);
+                                _spots[index][subIndex]);
                           },
                         )
                             : SizedBox(),
@@ -166,7 +235,10 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         Map<String, dynamic>? courseInfo,
         VoidCallback? onTrailingIconPressed,
         VoidCallback? onPressed,
-        bool hasRouteButton = false}) {
+        bool hasRouteButton = false,
+        int? trainIdx,
+        List<dynamic>? trailPath,
+      }) {
     final screenWidth = MediaQuery
         .of(context)
         .size
@@ -239,11 +311,16 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 ],
               ),
             ),
+
+            // 길찾기 버튼
             if (hasRouteButton)
               Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
                   onPressed: () {
+                    selectedTrailIdx = trainIdx;
+                    selectedTrailPath = trailPath;
+
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -282,36 +359,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   }
 
 
-  Widget _buildCourseInfo(Map<String, String> courseInfo) {
-    return Row(
-      children: [
-        _buildInfoItem('🚩', courseInfo['difficulty'] ?? ''),
-        SizedBox(width: 10),
-        _buildInfoItem('⏱', courseInfo['time'] ?? ''),
-        SizedBox(width: 10),
-        _buildInfoItem('🏃‍♂️', courseInfo['distance'] ?? ''),
-      ],
-    );
-  }
-
-  Widget _buildInfoItem(String icon, String text) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(
-          icon,
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-        SizedBox(width: 5),
-        Text(
-          text,
-          style: TextStyle(fontSize: 14, color: Colors.black),
-        ),
-      ],
-    );
-  }
-
-  Widget _buildSubCourseItem(String subCourseNumber) {
+  Widget _buildSubCourseItem(Map<String, dynamic> subCourse) {
+    // print('서브코스 $subCourse');
     final screenWidth = MediaQuery
         .of(context)
         .size
@@ -359,7 +408,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '세부 코스 $subCourseNumber',
+                    '세부 코스 ${subCourse['spot_idx']}',
                     style: TextStyle(
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
@@ -368,7 +417,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                   ),
                   SizedBox(height: 5),
                   Text(
-                    '세부 코스 ${subCourseNumber}의 설명이 여기에 나옵니다.',
+                    subCourse['spot_name'],
                     style: TextStyle(
                       fontSize: 12,
                       color: Colors.black54,
