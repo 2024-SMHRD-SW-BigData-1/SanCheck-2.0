@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/login_success.dart';
+import 'package:sancheck/service/auth_service.dart';
+import 'package:sancheck/service/mountain_service.dart';
 import 'package:sancheck/service/trail_service.dart';
 
 class HomeMtDetail extends StatefulWidget {
@@ -13,8 +15,8 @@ class HomeMtDetail extends StatefulWidget {
 }
 
 class _HomeMtDetailState extends State<HomeMtDetail> {
-  TrailService _trailService = TrailService();
-  Set<String> favoriteItems = {};
+  final TrailService _trailService = TrailService();
+  final MountainService _mountainService = MountainService();
   List<bool> _isOpenList = [];
   List<dynamic> _trails = [];
   List<List<dynamic>> _spots = [];
@@ -151,18 +153,31 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               trailingIcon: _containsMountIdx
                   ? Icons.star
                   : Icons.star_border,
-              onTrailingIconPressed: () {
-                setState(() {
-                  if (_containsMountIdx) {
-                    favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
-                  } else {
-                    favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
+              
+              // 별 버튼 클릭
+              onTrailingIconPressed: () async {
+
+                  if (_containsMountIdx) { //favMt에서 제거
+                    setState(() {
+                      favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
+                    });
+                    await _removeFavMountain(_mountIdx!, userModel!.userId);
+
+                  } else { // favMt에 추가
+                    setState(() {
+                      favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
+                    });
+                    await _addFavMountain(_mountIdx!, userModel!.userId);
                   }
-                });
-                // _containsMountIdx를 상태에 맞게 업데이트
-                _containsMountIdx = !_containsMountIdx;
+                  // _containsMountIdx를 상태에 맞게 업데이트
+                  setState(() {
+                    _containsMountIdx = !_containsMountIdx;
+                  });
+
+
+
               },
-            ),
+              ),
             SizedBox(height: 20),
             Expanded(
               child: ListView.separated(
@@ -458,4 +473,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       },
     );
   }
+
+  Future<void> _addFavMountain(int mountIdx, String userId)async {
+    await _mountainService.addFavMountain(mountIdx, userId);
+  }
+
+  Future<void> _removeFavMountain(int mountIdx, String userId)async {
+    await _mountainService.removeFavMountain(mountIdx, userId);
+  }
+
+
 }

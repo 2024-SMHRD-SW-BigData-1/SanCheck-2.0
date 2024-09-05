@@ -95,7 +95,7 @@ class _HomeState extends State<Home> {
                 SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: '인기있는 산',
-                  items: ["북한산", "남산"],
+                  items: [{'mount_idx':105}, {'mount_idx':38}, {'mount_idx':17},],
                   buttonColor: Colors.blue,
                   iconUrl:
                   'https://img.icons8.com/3d-fluency/94/fire-element--v2.png',
@@ -108,7 +108,7 @@ class _HomeState extends State<Home> {
                 SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: "관심있는 산",
-                  items: ["북한산", "남산", "지리산"],
+                  items: favMountains!,
                   buttonColor: Colors.green,
                   iconUrl:
                   'https://img.icons8.com/emoji/96/sparkling-heart.png',
@@ -158,7 +158,7 @@ class _HomeState extends State<Home> {
 
 class ExpandableButtonList extends StatefulWidget {
   final String title;
-  final List<String> items;
+  final List<dynamic> items;
   final Color buttonColor;
   final String? iconUrl;
   final bool isNavigable;
@@ -182,6 +182,23 @@ class ExpandableButtonList extends StatefulWidget {
 class _ExpandableButtonListState extends State<ExpandableButtonList> {
   bool _isExpanded = false;
   Set<String> favoriteItems = {};
+  List<dynamic> commonItems = [];
+
+
+  void searchCommonItems(){
+    // 겹치는 mount_idx를 가진 객체를 찾는 코드
+    commonItems = favMountains!.where((favItem) {
+      return widget.items.any((item) => item['mount_idx'] == favItem['mount_idx']);
+    }).toList();
+  }
+
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -212,10 +229,10 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
                   padding: EdgeInsets.symmetric(vertical: screenWidth * 0.01),
                   child: _buildStyledButton(
                     widget.items[index],
+
+                    // 버튼 클릭 시 해당 페이지로 이동
                     onPressed: () {
                       if (widget.isNavigable && widget.navigateToPage != null) {
-
-                        // 하위 버튼 클릭 시 해당 페이지로 이동
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -228,16 +245,15 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
 
                     // 별 표시 여부
                     // showStarIcon이 true && 클릭한 아이템이 관심있는 산 목록에 있을 경우 : 채워진 별
-                    trailingIcon: widget.showStarIcon &&
-                        favoriteItems.contains(widget.items[index])
+                    trailingIcon: widget.showStarIcon && commonItems.isNotEmpty
                         ? Icons.star
-
                     // 반대일 경우 : 비워진 별
                         : widget.showStarIcon
                         ? Icons.star_border
-
                     // 둘 중 하나라도 아닌 경우 : null
                         : null, // 별 아이콘 표시 여부 조건 추가
+                    
+                    // 별 클릭 콜백
                     onTrailingIconPressed: () {
                       setState(() {
                         if (favoriteItems.contains(widget.items[index])) {
