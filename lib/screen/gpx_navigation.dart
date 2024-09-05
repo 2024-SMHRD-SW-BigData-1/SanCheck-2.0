@@ -1,7 +1,11 @@
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
+import 'package:pedometer/pedometer.dart';
 import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/provider/mountain_provider.dart';
@@ -22,13 +26,26 @@ class GpxNavigation extends StatefulWidget {
 
 class GpxNavigationState extends State<GpxNavigation> {
 
-  NCameraPosition _cameraPosition = const NCameraPosition(
-    target: NLatLng(37.5665, 126.978), // 서울 시청
-    zoom: 10,
-    bearing: 0,
-    tilt: 0,
-  );
-  Location location = Location();
+  // secureStorage, Location package
+  final _storage = FlutterSecureStorage();
+  final Location _location = Location();
+
+  // 위도, 경도, LineString 배열 생성
+  List<double> loc_lst_lat = [];
+  List<double> loc_lst_lon = [];
+  List<double> loc_lst = [];
+
+  // pedometer로 운동 데이터 로딩
+  late Stream<StepCount> _stepCountStream;
+  late Stream<PedestrianStatus> _pedestrianStatusStream;
+
+  // 걸음수, 소모 칼로리 초기화
+  int _initialSteps = 0;
+  int _counter = 0;
+  int _currentSteps = 0;
+  int _stepsOffset = 0;
+  double _useCal = 0;
+  double rounded_use_cal = 0;
 
   // 네이버 맵 초기화
   @override
@@ -77,6 +94,16 @@ class GpxNavigationState extends State<GpxNavigation> {
       }
     }
   }
+
+  // 카메라 초기 위치 지정
+  NCameraPosition _cameraPosition = const NCameraPosition(
+    target: NLatLng(37.5665, 126.978), // 서울 시청
+    zoom: 10,
+    bearing: 0,
+    tilt: 0,
+  );
+  Location location = Location();
+
 
   // Naver Map SDK 초기화
   Future<void> _initializeNaverMapSdk() async {
@@ -148,6 +175,129 @@ class GpxNavigationState extends State<GpxNavigation> {
     });
   }
 
+
+  // 운동 기록 저장 메소드 시작
+
+  // 경로 DB에 저장
+  void save_route() async {
+    Dio dio = Dio();
+
+    loc_lst.clear(); // Clear loc_lst
+    print("lat : $loc_lst_lat");
+    print("lon : $loc_lst_lon");
+
+    for (int i = 0; i < loc_lst_lat.length; i++) {
+      loc_lst.add(loc_lst_lat[i]);
+      loc_lst.add(loc_lst_lon[i]);
+    }
+    print("loc_lst : $loc_lst");
+
+    if (loc_lst.isEmpty) {
+      print("Error: Location list is empty");
+      return;
+    }
+
+    // String combinedString = loc_lst.map((number) => number.toString()).join(', ');
+
+    String combinedString = loc_lst.asMap().entries.map((entry) {
+      if (entry.key % 2 == 0) {
+        return '${loc_lst[entry.key]} ${loc_lst[entry.key + 1]}';
+      } else {
+        return null;
+      }
+    }).where((element) => element != null).join(', ');
+
+    String linestring = "LineString($combinedString)";
+
+    print(linestring);
+
+    _storage.write(key: "user", value: "user");
+    String? userId = await _storage.read(key: "user");
+    String? hikingRoute = await _storage.read(key: "key");
+
+    String url = "http://192.168.219.167:8000/mountain/upload";
+
+    try {
+      Response res = await dio.post(url, data: {
+        "user_id": "test",
+        "trail_idx" : 1,
+        "hiking_date": DateTime.now().toIso8601String(),
+        "hiking_steps": _currentSteps,
+        "hiking_state": true,
+        "hiking_time": _counter,
+        "hiking_route": linestring
+      });
+
+      print(res.statusCode);
+      print(res.realUri);
+      getImg();
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+  }
+
+  // 운동 기록 이미지로 저장
+  void getImg() async{
+    Dio dio = Dio();
+    String? user_name = await _storage.read(key: "user");
+
+    String url = "http://192.168.219.167:5050/drawMap";
+
+    try{
+      Response res = await dio.get(url, queryParameters: {
+        "user_id" : user_name
+      });
+    }catch (e){
+      print('Error sending request: $e');
+    }
+  }
+
+  void onStepCount(StepCount event) {
+    setState(() {
+      _currentSteps = event.steps - _initialSteps - _stepsOffset;
+      _useCal = _currentSteps * 70.0 * 0.0005;
+      rounded_use_cal = double.parse(_useCal.toStringAsFixed(2));
+    });
+  }
+
+
+  void onStepCountError(error) {
+    print('Step Count Error: $error');
+  }
+
+  void onPedestrianStatusError(error) {
+    print('Pedestrian Status Error: $error');
+  }
+
+  Future<void> initPlatformState() async {
+    _pedestrianStatusStream = Pedometer.pedestrianStatusStream;
+    _stepCountStream = Pedometer.stepCountStream;
+
+    _stepCountStream.listen((event) {
+      if (_initialSteps == 0) {
+        setState(() {
+          _initialSteps = event.steps;
+        });
+      }
+      onStepCount(event);
+    }).onError(onStepCountError);
+  }
+
+  void resetSteps() {
+    setState(() {
+      _stepsOffset = _currentSteps + _stepsOffset;
+      _currentSteps = 0;
+    });
+  }
+
+
+
+
+
+
+
+
+  // UI 시작
   @override
   Widget build(BuildContext context) {
 
