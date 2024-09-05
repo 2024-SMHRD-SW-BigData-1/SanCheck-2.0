@@ -4,6 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:location/location.dart';
+import 'package:sancheck/globals.dart';
+import 'package:sancheck/screen/hike_record.dart';
+import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
 import 'package:shared_preferences/shared_preferences.dart'; // SharedPreferences 추가
 import 'package:image_picker/image_picker.dart'; // 이미지 픽커 추가
 import 'package:sancheck/screen/weather.dart';
@@ -72,6 +75,8 @@ class _HikeState extends State<Hike> {
   bool _isPaused = false;
   Timer? _timer;
   ValueNotifier<int> _secondsNotifier = ValueNotifier<int>(0);
+  List<NLatLng> _coords = [];
+
   File? _capturedImage; // 촬영한 사진 저장 변수
 
   @override
@@ -79,6 +84,92 @@ class _HikeState extends State<Hike> {
     super.initState();
     _loadTimerValue(); // 앱 시작 시 저장된 타이머 값 불러오기
   }
+
+
+
+Future<void> _initialize() async{
+  WidgetsFlutterBinding.ensureInitialized();
+
+  final LocationData currentLocation = await location.getLocation();
+
+  double nx = (currentLocation.latitude!);
+  double ny = (currentLocation.longitude!);
+
+
+
+  _cameraPosition = NCameraPosition(
+  target: NLatLng(nx, ny),
+  zoom: 10,
+  bearing: 0,
+  tilt: 0,
+  );
+  // 네이버 앱 인증
+  await NaverMapSdk.instance.initialize(
+    clientId: '119m2j9zpj',
+    onAuthFailed: (ex) {
+    print("********* 네이버맵 인증오류 : $ex *********");
+    },
+  );
+
+  // 위치 서비스 확인 및 요청
+  bool _serviceEnabled = await location.serviceEnabled();
+  if (!_serviceEnabled) {
+    _serviceEnabled = await location.requestService();
+    if (!_serviceEnabled) {
+      return;
+    }
+  }
+
+  // 위치 권한 확인 및 요청
+  PermissionStatus _permissionGranted = await location.hasPermission();
+  if (_permissionGranted == PermissionStatus.denied) {
+    _permissionGranted = await location.requestPermission();
+    if (_permissionGranted != PermissionStatus.granted) {
+      return;
+    }
+  }
+  await _loadTimerValue();  // 앱 시작 시 저장된 타이머 값 불러오기
+
+
+  // 경로 정보 set
+  setState(() {
+    _coords = selectedTrail!['trail_path']!.map<NLatLng>((point) {
+      return NLatLng(point['x'], point['y']);
+    }).toList();
+  });
+
+}
+
+// spot을 지도에 추가하는 함수
+  Future<void> addSpotsToMap(controller) async {
+    if (selectedSpots!.isEmpty || selectedSpots==null){
+      return;
+    }
+    NOverlayImage image =  await NOverlayImage.fromWidget(widget: Icon(Icons.add_alert), size: Size(5.0, 5.0), context: context);
+    // 맵 컨트롤러가 준비된 후 마커를 추가하도록 수정
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      selectedSpots!.forEach((spot) {
+        // mountain은 배열 안의 각 객체(산 정보)를 나타냅니다.
+        final marker = NMarker(
+          id: spot['spot_idx'].toString(), // 스팟의 고유 ID
+          icon: image,
+          position: NLatLng(double.parse(spot['spot_latitude']),double.parse(spot['spot_longitude'])), // 마커의 위치 설정
+          size: Size(20, 25), // 마커의 크기 설정
+          caption: NOverlayCaption(text: spot['spot_name'], textSize: 12.0),
+          isHideCollidedSymbols: true,
+        );
+
+        // 마커를 지도에 추가
+        controller.addOverlay(marker);
+        marker.setOnTapListener(
+                (NMarker marker)=>{
+              print("마커 클릭됨"),
+            }
+        );
+      });
+    });
+  }
+
 
   Future<void> _initializeNaverMapSdk() async {
     await NaverMapSdk.instance.initialize(clientId: '119m2j9zpj');
@@ -317,7 +408,17 @@ class _HikeState extends State<Hike> {
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (_isTracking)
+                  if(selectedTrail!=null && !_isTracking)
+                        Text(
+                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                  if(selectedTrail==null && !_isTracking)
+                    Text(
+                      '선택된 등산로: 없음 ',
+                      style: TextStyle(fontSize: 16),
+                    ),
+                  if (selectedTrail==null && _isTracking)
                     Row(
                       children: [
                         Text(
@@ -335,16 +436,94 @@ class _HikeState extends State<Hike> {
                         ),
                       ],
                     ),
+                  if(selectedTrail!=null && _isTracking)
+                    Column(
+                      children: [
+                        Text(
+                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                        Row(
+                          children: [
+                            Text(
+                              '경과 시간: ',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            ValueListenableBuilder<int>(
+                              valueListenable: _secondsNotifier,
+                              builder: (context, seconds, child) {
+                                return Text(
+                                  _formatTime(seconds),
+                                  style: TextStyle(fontSize: 16),
+                                );
+                              },
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
                 ],
               ),
-              foregroundColor: Colors.black, // AppBar 아이콘 및 제목 색상
+              backgroundColor: Colors.grey[200],
+              elevation: 0,
+              foregroundColor: Colors.black,
+              actions: selectedTrail != null && !_isTracking
+                  ? [
+                IconButton(
+                  icon: Icon(Icons.dangerous),
+                  onPressed: () {
+                    setState(() {
+                      selectedTrail = null;
+                      selectedMountain = null;
+                      selectedSpots = null;
+                      _coords= [];
+                    });
+                  },
+                ),
+              ]
+                  : [],
             ),
             body: Stack(
               children: [
-                // 맵을 별도 위젯으로 분리하여 새로고침 방지
-                MapWidget(
-                  cameraPosition: _cameraPosition,
-                  currentPosition: _currentPosition,
+                NaverMap(
+                  forceGesture: true,
+                  options: NaverMapViewOptions(
+                    initialCameraPosition: _cameraPosition,
+                    consumeSymbolTapEvents: false,
+                    locationButtonEnable: true,
+                    logoClickEnable: false,
+                    minZoom: 5, // default is 0
+                    maxZoom: 18, // default is 21
+                    extent: const NLatLngBounds(
+                      southWest: NLatLng(31.43, 122.37),
+                      northEast: NLatLng(44.35, 132.0),
+                    ),
+                  ),
+                  onMapReady: (controller) {
+                    print("등산하기 맵 로딩 완료");
+                    NLocationTrackingMode mode = NLocationTrackingMode.follow;
+                    controller.setLocationTrackingMode(mode);
+
+                    // 경로가 있는 경우 NPathOverlay를 추가
+                    if (_coords.isNotEmpty && selectedSpots!=null) {
+                      var route = NPathOverlay(
+                        id: '$selectedTrail["trail_idx"]',
+                        coords: _coords,
+                        color: Colors.blue,
+                        width: 5,
+                      );
+                      controller.addOverlay(route);
+
+                      addSpotsToMap(controller);
+
+                      controller.updateCamera(NCameraUpdate.withParams(
+                        target: NLatLng(double.parse(selectedMountain!['mount_latitude']), double.parse(selectedMountain!['mount_longitude'])),
+                        zoom: 11,
+                        bearing: 0,
+                        tilt: 0
+                      ));
+                    }
+                  },
                 ),
                 Positioned(
                   bottom: 20,

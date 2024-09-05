@@ -185,10 +185,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                         trailingIcon: _isOpenList[index]
                             ? Icons.keyboard_arrow_up
                             : Icons.keyboard_arrow_down,
-
                         // Map<> 구조
                         courseInfo: _trails[index],
-                        
                         // 클릭 시 _isOpenList 토글
                         onPressed: () {
                           setState(() {
@@ -196,8 +194,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                           });
                         },
                         hasRouteButton: true, // 길찾기 버튼이 있는지 여부
-                        trailPath: _trails[index]['trail_path'],
-                        trainIdx: _trails[index]['trail_idx'],
+                        trail: _trails[index], // 선택된 등산로 가져가기
+                        spots: _spots[index],
                       ),
 
 
@@ -236,8 +234,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         VoidCallback? onTrailingIconPressed,
         VoidCallback? onPressed,
         bool hasRouteButton = false,
-        int? trainIdx,
-        List<dynamic>? trailPath,
+        Map<String, dynamic>? trail,
+        List<dynamic>? spots
       }) {
     final screenWidth = MediaQuery
         .of(context)
@@ -317,10 +315,15 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               Padding(
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
-                  onPressed: () {
-                    selectedTrailIdx = trainIdx;
-                    selectedTrailPath = trailPath;
-
+                  
+                  // 길찾기 버튼 클릭 콜백
+                  onPressed:  () async{
+                    selectedMountain = allMountains!.firstWhere(
+                          (element) => element['mount_name'] == widget.mountainName,
+                      orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
+                    );
+                    selectedSpots = spots;
+                    selectedTrail = trail;
                     Navigator.pushAndRemoveUntil(
                       context,
                       MaterialPageRoute(
@@ -357,6 +360,11 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       ),
     );
   }
+
+
+
+
+
 
 
   Widget _buildSubCourseItem(Map<String, dynamic> subCourse) {
