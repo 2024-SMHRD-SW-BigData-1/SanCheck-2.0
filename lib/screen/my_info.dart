@@ -1,261 +1,236 @@
 import 'package:flutter/material.dart';
-import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/delete_id.dart';
-import 'package:sancheck/screen/loading_page.dart';
 import 'package:sancheck/screen/login_success.dart';
+import 'package:sancheck/screen/user_profile.dart'; // UserProfile 위젯을 import
 
-class MyInfo extends StatefulWidget {
+class MyInfo extends StatelessWidget {
+  final String formattedDate; // formattedDate를 필드로 추가
 
-  final String formattedDate;
-
-  // 생성자를 통해 user와 formattedDate를 받음
-  MyInfo({required this.formattedDate});
-
-
-  @override
-  State<MyInfo> createState() => _MyInfoState();
-}
-
-class _MyInfoState extends State<MyInfo> {
-
-  @override
-  void initState() {
-    // TODO: implement initState
-    super.initState();
-  }
-
-
+  MyInfo({required this.formattedDate}); // 생성자에 formattedDate 추가
 
   @override
   Widget build(BuildContext context) {
-
-    if(userModel==null){
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_)=>LoadingPage()));
-    }
-
     void _onItemTapped(int index) {
       Navigator.pushAndRemoveUntil(
         context,
-        MaterialPageRoute(builder: (context) => LoginSuccess(selectedIndex: index)), // 이동할 페이지
-            (Route<dynamic> route) => false, // 모든 이전 화면을 제거
+        MaterialPageRoute(
+            builder: (context) => LoginSuccess(selectedIndex: index)),
+            (Route<dynamic> route) => false,
       );
     }
 
+    final screenWidth = MediaQuery.of(context).size.width;
+    final screenHeight = MediaQuery.of(context).size.height;
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('내 정보', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+        title: Text('내 정보',
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
         centerTitle: true,
         backgroundColor: Color(0xFFF5F5F5),
       ),
-      backgroundColor: Color(0xFFF5F5F5), // 배경색을 Home 페이지와 동일하게 설정
+      backgroundColor: Color(0xFFF5F5F5),
       body: Padding(
-        padding: const EdgeInsets.all(16.0), // Home 페이지와 동일하게 패딩 설정
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Profile Section
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20.0),
-              child: Row(
-                children: [
-                  CircleAvatar(
-                    radius: 27,
-                    backgroundColor: Color(0xFFCBCBCB),
-                    backgroundImage: NetworkImage("https://via.placeholder.com/54"),
-                  ),
-                  SizedBox(width: 20),
-                  Text.rich(
-                    TextSpan(
-                      children: [
-                        // 레벨
-                        TextSpan(
-                          text: '등린이 ',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w400,
-                          ),
-                        ),
-                        
-                        // 이름 
-                        TextSpan(
-                          text: userModel!.userName,
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 20,
-                            fontFamily: 'Inter',
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 40),
-
-            // Info Section
-            Container(
-              width: 340,
-              padding: EdgeInsets.all(24),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(color: Color(0xFFD9D9D9)), // 테두리 색상 Home 페이지와 동일하게 설정
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0x3F000000),
-                    blurRadius: 4,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InfoRow(
-                    icon: "https://via.placeholder.com/35x35",
-                    label: '생년월일',
-                    value: widget.formattedDate,
-                  ),
-                  SizedBox(height: 20),
-                  InfoRow(
-                    icon: "https://via.placeholder.com/45x45",
-                    label: '전화번호',
-                    value: userModel!.userPhone,
-                  ),
-                  SizedBox(height: 20),
-                  InfoRow(
-                    icon: "https://via.placeholder.com/45x45",
-                    label: '이메일',
-                    value: userModel!.userId,
-                  ),
-                  SizedBox(height: 20),
-                  InfoRow(
-                    icon: "https://via.placeholder.com/30x30",
-                    label: '성별',
-                    value: userModel!.userGender == 'M' ?'남성':'여성',
-                  ),
-                ],
-              ),
-            ),
-            SizedBox(height: 40),
-
-            // Account Settings Section
-            Container(
-              margin: EdgeInsets.symmetric(vertical: 10),
-              decoration: BoxDecoration(
-                color: Colors.white, // 버튼 배경색을 흰색으로 설정
-                borderRadius: BorderRadius.circular(8),
-                boxShadow: [
-                  BoxShadow(
-                    color: Color(0xFFC7C7C7),
-                    blurRadius: 4,
-                    offset: Offset(0, 2),
-                  ),
-                ],
-              ),
-              child: ElevatedButton(
-                onPressed: () {
-                  // 회원탈퇴 버튼 동작
-                  Navigator.push(context, MaterialPageRoute(builder: (_)=>DeleteId()));
-                },
-                style: ElevatedButton.styleFrom(
-                  foregroundColor: Color(0xFFE35154), // 글씨 색상을 E35154로 설정
-                  backgroundColor: Colors.transparent, // 배경색을 투명으로 설정
-                  padding: EdgeInsets.symmetric(vertical: 20), // 버튼의 상하 패딩 설정
-                  side: BorderSide(color: Color(0xFFD9D9D9)), // 테두리 색상 #D9D9D9로 설정
-                  elevation: 0, // 그림자 제거
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
-                  ), // 버튼 클릭 시 색상 #C7C7C7로 설정
+        padding: const EdgeInsets.all(16.0),
+        child: SingleChildScrollView(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                child: UserProfile(
+                  userLevel: 1,
+                  nickname: '팜하니',
+                  iconUrl: 'https://img.icons8.com/color/96/babys-room.png',
                 ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.start,
+              ),
+              SizedBox(height: screenHeight * 0.05),
+
+              // Info Section
+              Container(
+                padding: EdgeInsets.all(screenWidth * 0.06),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Color(0xFFD9D9D9)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0x3F000000),
+                      blurRadius: 4,
+                      offset: Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    SizedBox(width: 16), // 왼쪽에 공백 추가
-                    Image.network(
-                      'https://img.icons8.com/fluency/96/christmas-star.png',
-                      width: 24, // 아이콘 크기 조정
-                      height: 24,
+                    InfoRow(
+                      icon: "https://img.icons8.com/tiny-color/64/birth-date.png",
+                      label: '생년월일',
+                      value: formattedDate, // 전달된 formattedDate 사용
+                      iconSize: screenWidth * 0.08,
+                      circleRadius: screenWidth * 0.1,
                     ),
-                    SizedBox(width: 16), // 아이콘과 텍스트 사이의 공백 추가
-                    Text('회원탈퇴', style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)), // 글자색 E35154로 설정 및 굵게 변경
-                    Spacer(), // 왼쪽 공백을 최대화
-                    Image.network(
-                      'https://img.icons8.com/ios-filled/50/double-right.png',
-                      width: 24, // 아이콘 크기 조정
-                      height: 24,
+                    SizedBox(height: screenHeight * 0.02),
+                    InfoRow(
+                      icon: "https://img.icons8.com/ios-glyphs/90/FA5252/ringer-volume.png",
+                      label: '전화번호',
+                      value: '010-1111-5555',
+                      iconSize: screenWidth * 0.08,
+                      circleRadius: screenWidth * 0.1,
                     ),
-                    SizedBox(width: 16), // 오른쪽 공백 추가
+                    SizedBox(height: screenHeight * 0.02),
+                    InfoRow(
+                      icon: "https://img.icons8.com/tiny-color/64/new-post.png",
+                      label: '이메일',
+                      value: 'qwer@googole.com',
+                      iconSize: screenWidth * 0.08,
+                      circleRadius: screenWidth * 0.1,
+                    ),
+                    SizedBox(height: screenHeight * 0.02),
+                    InfoRow(
+                      icon: "https://img.icons8.com/tiny-color/64/gender.png",
+                      label: '성별',
+                      value: '여',
+                      iconSize: screenWidth * 0.08,
+                      circleRadius: screenWidth * 0.1,
+                    ),
                   ],
                 ),
               ),
-            ),
-          ],
+              SizedBox(height: screenHeight * 0.04),
+
+              // Account Settings Section
+              Container(
+                margin: EdgeInsets.symmetric(vertical: 10),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(8),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Color(0xFFC7C7C7),
+                      blurRadius: 4,
+                      offset: Offset(0, 2),
+                    ),
+                  ],
+                ),
+                child: ElevatedButton(
+                  onPressed: () {
+                    Navigator.push(
+                        context, MaterialPageRoute(builder: (_) => DeleteId()));
+                  },
+                  style: ElevatedButton.styleFrom(
+                    foregroundColor: Color(0xFFE35154),
+                    backgroundColor: Colors.transparent,
+                    padding: EdgeInsets.symmetric(vertical: screenHeight * 0.02),
+                    side: BorderSide(color: Color(0xFFD9D9D9)),
+                    elevation: 0,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      SizedBox(width: screenWidth * 0.04),
+                      Image.network(
+                        'https://img.icons8.com/color/96/crying-baby.png',
+                        width: screenWidth * 0.06,
+                        height: screenWidth * 0.06,
+                      ),
+                      SizedBox(width: screenWidth * 0.04),
+                      Text('회원탈퇴',
+                          style: TextStyle(
+                              fontSize: screenWidth * 0.045,
+                              fontWeight: FontWeight.bold)),
+                      Spacer(),
+                      Image.network(
+                        'https://img.icons8.com/ios-filled/50/double-right.png',
+                        width: screenWidth * 0.06,
+                        height: screenWidth * 0.06,
+                      ),
+                      SizedBox(width: screenWidth * 0.04),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
       bottomNavigationBar: BottomNavigationBar(
+        backgroundColor: Colors.white, // 하단바 배경색을 흰색으로 설정
         items: [
           BottomNavigationBarItem(
               icon: Image.network(
                 'https://img.icons8.com/pulsar-line/96/mission-of-a-company.png',
-                width: 24, height: 24,
-              ), label: '등산하기'),
-
+                width: 24,
+                height: 24,
+              ),
+              label: '등산하기'),
           BottomNavigationBarItem(
               icon: Image.network(
                 'https://img.icons8.com/pulsar-line/96/home.png',
-                width: 24, height: 24,
+                width: 24,
+                height: 24,
               ),
               label: 'HOME'),
-
           BottomNavigationBarItem(
-              icon:Image.network(
+              icon: Image.network(
                 'https://img.icons8.com/pulsar-line/96/groups.png',
-                width: 24, height: 24,
-              ), label: '커뮤니티'),
-
+                width: 24,
+                height: 24,
+              ),
+              label: '커뮤니티'),
           BottomNavigationBarItem(
               icon: Image.network(
                 'https://img.icons8.com/pulsar-color/96/user-male-circle.png',
-                width: 24, height: 24,), label: '마이페이지'),
+                width: 24,
+                height: 24,
+              ),
+              label: '마이페이지'),
         ],
         currentIndex: 3,
         onTap: _onItemTapped,
-        selectedItemColor: Colors.black, // 선택된 아이템의 텍스트 색상
-        unselectedItemColor: Colors.black, // 선택되지 않은 아이템의 텍스트 색상
+        selectedItemColor: Colors.black,
+        unselectedItemColor: Colors.black,
       ),
-
     );
   }
 }
 
-
-
-
-
-
-// InfoRow 클래스 정의
+// InfoRow 위젯 정의
 class InfoRow extends StatelessWidget {
   final String icon;
   final String label;
   final String value;
+  final double iconSize;
+  final double circleRadius;
 
-  InfoRow({required this.icon, required this.label, required this.value});
+  InfoRow({
+    required this.icon,
+    required this.label,
+    required this.value,
+    this.iconSize = 24.0,
+    this.circleRadius = 24.0,
+  });
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
+
     return Row(
       children: [
         CircleAvatar(
-          radius: 22.5,
+          radius: 30, // 원의 크기를 더 크게 설정
           backgroundColor: Color(0xFFF1F1F1),
-          child: Image.network(icon),
+          child: Image.network(
+            icon,
+            width: 30, // 아이콘 크기 조절
+            height: 30,
+          ),
         ),
-        SizedBox(width: 16),
+        SizedBox(width: screenWidth * 0.04),
         Expanded(
           child: Text.rich(
             TextSpan(
@@ -264,7 +239,7 @@ class InfoRow extends StatelessWidget {
                   text: '$label  ',
                   style: TextStyle(
                     color: Colors.black,
-                    fontSize: 16,
+                    fontSize: screenWidth * 0.04,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
                   ),
@@ -273,7 +248,7 @@ class InfoRow extends StatelessWidget {
                   text: value,
                   style: TextStyle(
                     color: Color(0xFFB3B3B3),
-                    fontSize: 16,
+                    fontSize: screenWidth * 0.04,
                     fontFamily: 'Inter',
                     fontWeight: FontWeight.w700,
                   ),

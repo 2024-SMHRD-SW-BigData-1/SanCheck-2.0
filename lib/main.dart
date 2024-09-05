@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:sancheck/provider/mountain_provider.dart';
 import 'package:sancheck/screen/loading_page.dart';
+import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/test/weather_api_test.dart';
 //import 'package:sancheck/screen/login_page.dart';
 //import 'package:sancheck/test/chatgpt_api_test.dart';
