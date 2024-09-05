@@ -13,7 +13,7 @@ class TrailService{
 
       print('Request URL: ${res.realUri}');
       print('Status Code: ${res.statusCode}');
-      print('Response Data: ${res.data}');
+      //print('Response Data: ${res.data}');
 
       if (res.data['success']) {
         return res.data['trails']; // 성공 시 데이터 리스트 반환
@@ -34,9 +34,9 @@ class TrailService{
         'trailIdx': trailIdx,
       });
 
-      print('Request URL: ${res.realUri}');
-      print('Status Code: ${res.statusCode}');
-      print('Response Data: ${res.data}');
+      //print('Request URL: ${res.realUri}');
+      //print('Status Code: ${res.statusCode}');
+     // print('Response Data: ${res.data}');
 
       return res.data['spots']; // 성공 시 데이터 리스트 반환
 

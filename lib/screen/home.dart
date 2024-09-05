@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:sancheck/service/mountain_service.dart';
+import 'package:sancheck/globals.dart';
 import '../provider/mountain_provider.dart';
 import 'gpx_navigation.dart'; // GpxNavigation 클래스를 포함한 파일을 import
 import 'home_mt_detail.dart'; // Import the detail page
@@ -16,13 +16,10 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
-  final MountainService _mountainService = MountainService(); // MountainService 인스턴스 생성
 
   @override
   void initState() {
     super.initState();
-    // home 초기화 시 로그인 된 유저의 like된 mountain있는지 확인
-    _mountainService.searchFavMountain();
   }
 
   @override

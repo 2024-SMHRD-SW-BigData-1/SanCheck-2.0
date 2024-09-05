@@ -1,5 +1,6 @@
 // 앱 시작 시 로딩 화면
-// 위치권한, 로그인 여부 체크 + 산 데이터 전역변수에 저장해서 처음 지도 초기화 속도 빠르게
+// 위치권한, 로그인 여부 체크 + 모든 산 데이터 전역변수에 저장해서 처음 지도 초기화 속도 빠르게
+// 관심있는 산을 전역변수로 가져온 다음, 이후 별표 누를 때마다 서버 통신 진행되는 동시에 전역변수 값도 바꿔서 사용자 경험 향상
 
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -50,8 +51,8 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       _showPermissionDialog();
     } else if (status.isGranted) {
       // 권한이 허용된 경우
-      _selectAllMountain();
-      _readLoginInfo();
+      await _selectAllMountain();
+      await _readLoginInfo();
     } else if (status.isPermanentlyDenied) {
       // 권한이 영구적으로 거절된 경우
       _showPermissionSettingsDialog();
@@ -64,6 +65,15 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       allMountains = mountains;
     } catch (e) {
       print("Error fetching all mountains: $e");
+    }
+  }
+
+  Future<void> _selectFavMountain(String userId) async{
+    try {
+      List<dynamic> mountains = await _mountainService.searchFavMountain(userId);
+      favMountains = mountains;
+    } catch (e) {
+      print("Error fetching fav mountains: $e");
     }
   }
 
@@ -127,6 +137,10 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
 
     if (user != null) {
       userModel = user;
+
+      await _selectFavMountain(userModel!.userId); // 페이지 이동 전 관심있는 산 가져오기
+      print('favMountain : $favMountains');
+      
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
