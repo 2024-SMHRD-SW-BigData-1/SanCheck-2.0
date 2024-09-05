@@ -42,11 +42,14 @@ class MedalModal extends StatelessWidget {
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
-                  medalImageUrl,
-                  fit: BoxFit.cover,
-                  width: 100,
-                  height: 100,
+                  medalImageUrl.isNotEmpty ? medalImageUrl : 'https://default-image-url.com', // 기본 이미지 URL 설정
+                  width: 32,
+                  height: 32,
+                  errorBuilder: (context, error, stackTrace) {
+                    return Image.asset('assets/images/default_image.png', width: 32, height: 32); // 로컬 기본 이미지 설정
+                  },
                 ),
+
               ),
             ),
             SizedBox(height: 16),
@@ -61,7 +64,7 @@ class MedalModal extends StatelessWidget {
             SizedBox(height: 24),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.blue,
+                backgroundColor: Colors.green,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
