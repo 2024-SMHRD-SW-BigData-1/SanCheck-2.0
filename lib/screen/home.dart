@@ -16,17 +16,14 @@ class Home extends StatefulWidget {
 
 class _HomeState extends State<Home> {
   final TextEditingController _searchController = TextEditingController();
-  final MountainService _mountainService = MountainService(); // AuthService 인스턴스 생성
-
+  final MountainService _mountainService = MountainService(); // MountainService 인스턴스 생성
 
   @override
   void initState() {
-    // TODO: implement initState
     super.initState();
     // home 초기화 시 로그인 된 유저의 like된 mountain있는지 확인
     _mountainService.searchFavMountain();
   }
-
 
   @override
   void dispose() {
@@ -93,12 +90,12 @@ class _HomeState extends State<Home> {
                     ],
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.03),
+                SizedBox(height: screenHeight * 0.015), // 간격을 줄임
                 Container(
                   height: screenHeight * 0.4,
                   child: GpxNavigation(),
                 ),
-                SizedBox(height: screenHeight * 0.02),
+                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
                 ExpandableButtonList(
                   title: '인기있는 산',
                   items: ["북한산", "남산"],
@@ -111,7 +108,7 @@ class _HomeState extends State<Home> {
                     mountainName: selectedItem,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.01),
+                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
                 ExpandableButtonList(
                   title: "관심있는 산",
                   items: ["북한산", "남산", "지리산"],
@@ -124,7 +121,7 @@ class _HomeState extends State<Home> {
                     mountainName: selectedItem,
                   ),
                 ),
-                SizedBox(height: screenHeight * 0.01),
+                SizedBox(height: screenHeight * 0.005), // 간격을 더 줄임
                 ExpandableButtonList(
                   title: "난이도별 코스",
                   items: ["쉬움", "보통", "어려움"],
@@ -162,12 +159,6 @@ class _HomeState extends State<Home> {
   }
 }
 
-
-
-
-
-
-
 class ExpandableButtonList extends StatefulWidget {
   final String title;
   final List<String> items;
@@ -204,7 +195,6 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          
           // 누르면 isExpanded 토글 됨
           _buildStyledButton(widget.title, iconUrl: widget.iconUrl, onPressed: () {
             setState(() {
@@ -216,7 +206,7 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
           AnimatedContainer(
             duration: Duration(milliseconds: 300),
             height: _isExpanded ? 200 : 0,
-            
+
             // 상위 위젯에서 items 가져와서 ListView로 빌드
             child: ListView.builder(
               itemCount: widget.items.length,
@@ -227,7 +217,7 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
                     widget.items[index],
                     onPressed: () {
                       if (widget.isNavigable && widget.navigateToPage != null) {
-                        
+
                         // 하위 버튼 클릭 시 해당 페이지로 이동
                         Navigator.push(
                           context,
@@ -238,7 +228,7 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
                         );
                       }
                     },
-                    
+
                     // 별 표시 여부
                     // showStarIcon이 true && 클릭한 아이템이 관심있는 산 목록에 있을 경우 : 채워진 별
                     trailingIcon: widget.showStarIcon &&
@@ -246,11 +236,11 @@ class _ExpandableButtonListState extends State<ExpandableButtonList> {
                         ? Icons.star
 
                     // 반대일 경우 : 비워진 별
-                          : widget.showStarIcon
-                            ? Icons.star_border
-                            
+                        : widget.showStarIcon
+                        ? Icons.star_border
+
                     // 둘 중 하나라도 아닌 경우 : null
-                            : null, // 별 아이콘 표시 여부 조건 추가
+                        : null, // 별 아이콘 표시 여부 조건 추가
                     onTrailingIconPressed: () {
                       setState(() {
                         if (favoriteItems.contains(widget.items[index])) {

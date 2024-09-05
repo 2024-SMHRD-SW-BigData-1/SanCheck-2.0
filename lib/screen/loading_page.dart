@@ -71,51 +71,53 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
   void _showPermissionDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('위치 권한 필요'),
-        content: Text('이 앱은 위치 권한이 필요합니다. 권한을 허용해 주세요.'),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              Navigator.of(context).pop();
-              var status = await Permission.location.request();
-              if (status.isDenied) {
-                _showPermissionSettingsDialog();
-              } else if (status.isGranted) {
-                _readLoginInfo();
-              }
-            },
-            child: Text('권한 요청'),
+      builder: (context) =>
+          AlertDialog(
+            title: Text('위치 권한 필요'),
+            content: Text('이 앱은 위치 권한이 필요합니다. 권한을 허용해 주세요.'),
+            actions: [
+              TextButton(
+                onPressed: () async {
+                  Navigator.of(context).pop();
+                  var status = await Permission.location.request();
+                  if (status.isDenied) {
+                    _showPermissionSettingsDialog();
+                  } else if (status.isGranted) {
+                    _readLoginInfo();
+                  }
+                },
+                child: Text('권한 요청'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('취소'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('취소'),
-          ),
-        ],
-      ),
     );
   }
 
   void _showPermissionSettingsDialog() {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
-        title: Text('위치 권한 설정'),
-        content: Text('위치 권한이 필요합니다. 설정에서 권한을 허용해 주세요.'),
-        actions: [
-          TextButton(
-            onPressed: () {
-              Navigator.of(context).pop();
-              openAppSettings();  // 권한 설정 페이지로 이동
-            },
-            child: Text('설정으로 이동'),
+      builder: (context) =>
+          AlertDialog(
+            title: Text('위치 권한 설정'),
+            content: Text('위치 권한이 필요합니다. 설정에서 권한을 허용해 주세요.'),
+            actions: [
+              TextButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  openAppSettings(); // 권한 설정 페이지로 이동
+                },
+                child: Text('설정으로 이동'),
+              ),
+              TextButton(
+                onPressed: () => Navigator.of(context).pop(),
+                child: Text('취소'),
+              ),
+            ],
           ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text('취소'),
-          ),
-        ],
-      ),
     );
   }
 
@@ -129,16 +131,53 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
         context,
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
       );
-    }else{
-      Navigator.pushReplacement(context, MaterialPageRoute(builder: (_)=>LoginPage()));
+    } else {
+      Navigator.pushReplacement(
+          context, MaterialPageRoute(builder: (_) => LoginPage()));
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return const Scaffold(
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+    final screenHeight = MediaQuery
+        .of(context)
+        .size
+        .height;
+
+    return Scaffold(
+      backgroundColor: Colors.white, // 배경색 설정
       body: Center(
-        child: Text('~~~~~~~~~~~~산책~~~~~~~~~~~~~'),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // 아이콘 이미지 추가 (크기를 화면 비율에 맞게 조정)
+            Image.network(
+              'https://img.icons8.com/external-smashingstocks-flat-smashing-stocks/66/external-Mountain-vacation-and-traveling-smashingstocks-flat-smashing-stocks.png',
+              width: screenWidth * 0.4, // 화면 너비의 40%로 설정
+              height: screenHeight * 0.25, // 화면 높이의 25%로 설정
+              fit: BoxFit.contain, // 이미지가 잘 맞도록 설정
+            ),
+            SizedBox(height: 30), // 이미지와 인디케이터 사이 간격
+            // 로딩 중인 애니메이션 효과 추가
+            CircularProgressIndicator(
+              color: Colors.green, // 로딩 인디케이터 색상
+              strokeWidth: 3.0, // 인디케이터의 두께
+            ),
+            SizedBox(height: 20), // 인디케이터와 텍스트 사이 간격
+            Text(
+              'SANCHECK', // 로딩 중인 메시지
+              style: TextStyle(
+                fontSize: screenWidth * 0.05, // 화면 크기에 맞춰 텍스트 크기 설정
+                fontWeight: FontWeight.bold,
+                color: Colors.black54, // 텍스트 색상
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

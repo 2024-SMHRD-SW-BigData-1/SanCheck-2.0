@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:sancheck/model/user_model.dart';
 import 'package:sancheck/screen/login_page.dart';
 import 'package:sancheck/service/auth_service.dart';
@@ -12,63 +11,75 @@ class DeleteId extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color(0xFFF5F5F5), // 배경색 설정
+      backgroundColor: Color(0xFFF2F2F7), // iOS 스타일 배경색
       appBar: AppBar(
-        title: Text('회원탈퇴'),
-        backgroundColor: Color(0xFFFFF5DA),
+        backgroundColor: Color(0xFFF2F2F7),
+        elevation: 0,
+        iconTheme: IconThemeData(color: Colors.black),
+        title: Text(
+          '회원탈퇴',
+          style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+        ),
+        centerTitle: true,
       ),
-      body: Padding(
+      body: SingleChildScrollView(
         padding: const EdgeInsets.all(16.0),
-        child: Container(
-          padding: const EdgeInsets.all(24),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            border: Border.all(color: Color(0xFFD9D9D9)),
-            borderRadius: BorderRadius.circular(8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _buildInputSection(),
+            SizedBox(height: 20),
+            _buildDeleteButton(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInputSection() {
+    return Container(
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 10,
+            offset: Offset(0, 5),
           ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                '회원탈퇴',
-                style: TextStyle(
-                  color: Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-              SizedBox(height: 24),
-              _buildInputField('아이디', '아이디를 입력해 주세요.', _idController),
-              SizedBox(height: 16),
-              _buildInputField('비밀번호', '비밀번호를 입력해 주세요.', _pwController),
-              SizedBox(height: 16),
-              _buildInputField('비밀번호 확인', '비밀번호를 다시 입력해 주세요.', _pwConfirmController),
-              Spacer(), // 버튼을 화면 하단으로 밀어줍니다.
-              Align(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  onPressed: () {
-                    handleDeleteId(context);
-                  },
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: Color(0xFFE35154), // 버튼 배경색
-                    padding: EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                  ),
-                  child: Text(
-                    '회원탈퇴',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w900,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 16),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _buildInputField('아이디', '아이디를 입력해 주세요.', _idController),
+          Divider(height: 30, color: Colors.grey.shade300),
+          _buildInputField('비밀번호', '비밀번호를 입력해 주세요.', _pwController, isPassword: true),
+          Divider(height: 30, color: Colors.grey.shade300),
+          _buildInputField('비밀번호 확인', '비밀번호를 다시 입력해 주세요.', _pwConfirmController, isPassword: true),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDeleteButton(BuildContext context) {
+    return ElevatedButton(
+      onPressed: () => handleDeleteId(context),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Colors.redAccent,
+        padding: EdgeInsets.symmetric(vertical: 16),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+        elevation: 0,
+      ),
+      child: Text(
+        '회원탈퇴',
+        style: TextStyle(
+          color: Colors.white,
+          fontSize: 18,
+          fontWeight: FontWeight.bold,
         ),
       ),
     );
@@ -115,28 +126,31 @@ class DeleteId extends StatelessWidget {
     }
   }
 
-  Widget _buildInputField(String label, String hintText, TextEditingController controller) {
+  Widget _buildInputField(String label, String hintText, TextEditingController controller, {bool isPassword = false}) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
           style: TextStyle(
-            color: Color(0xFF1E1E1E),
+            color: Colors.black,
             fontSize: 16,
-            fontWeight: FontWeight.w400,
+            fontWeight: FontWeight.w600,
           ),
         ),
         SizedBox(height: 8),
         TextField(
           controller: controller,
+          obscureText: isPassword,
           decoration: InputDecoration(
+            filled: true,
+            fillColor: Colors.grey.shade100,
             hintText: hintText,
-            hintStyle: TextStyle(color: Color(0xFF9E9E9E)),
+            hintStyle: TextStyle(color: Colors.grey),
             contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(8),
-              borderSide: BorderSide(color: Color(0xFFD9D9D9)),
+              borderSide: BorderSide.none,
             ),
           ),
         ),
