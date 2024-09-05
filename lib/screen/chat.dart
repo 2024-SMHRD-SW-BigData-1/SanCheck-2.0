@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-// import 'package:provider/provider.dart';  // 필요 시 Provider 사용
 import 'package:sancheck/service/api_service.dart';
 
 class ChatPage extends StatefulWidget {
@@ -11,7 +10,7 @@ class _ChatPageState extends State<ChatPage> {
   final TextEditingController _controller = TextEditingController();
   final List<Map<String, dynamic>> _messages = [];
   bool _isLoading = false;
-  final ApiService _apiService = ApiService(); // ApiService 인스턴스 생성
+  final ApiService _apiService = ApiService();
 
   @override
   void dispose() {
@@ -22,10 +21,8 @@ class _ChatPageState extends State<ChatPage> {
   // 메시지 전송 메서드
   void _sendMessage() async {
     if (_controller.text.isNotEmpty) {
-      print(_controller.text);
       setState(() {
-        _isLoading = true; // 로딩 시작
-
+        _isLoading = true;
         _messages.add({
           'text': _controller.text,
           'isAutoReply': false,
@@ -37,11 +34,9 @@ class _ChatPageState extends State<ChatPage> {
       });
 
       try {
-        // ApiService를 사용해 메시지를 서버로 전송
         final response = await _apiService.sendMessage(_messages);
 
         if (response['success']) {
-          // 요청 성공 시 자동 응답 처리
           _sendAutoReply(response['data']);
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
@@ -52,8 +47,6 @@ class _ChatPageState extends State<ChatPage> {
           );
         }
       } catch (e) {
-        print('Error occurred: $e');
-        ScaffoldMessenger.of(context).hideCurrentSnackBar(); // 현재 스낵바 숨기기
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
             content: Text('답변을 생성하는 도중 오류가 발생했습니다.'),
@@ -62,7 +55,7 @@ class _ChatPageState extends State<ChatPage> {
         );
       } finally {
         setState(() {
-          _isLoading = false; // 로딩 끝
+          _isLoading = false;
         });
       }
     }
@@ -95,12 +88,12 @@ class _ChatPageState extends State<ChatPage> {
           Expanded(
             child: SingleChildScrollView(
               padding: EdgeInsets.all(16),
+              reverse: true,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   _buildInitialMessage(),
                   SizedBox(height: 16),
-                  // 메시지 리스트 출력
                   ..._messages.map((message) => _buildMessage(
                     message['text'],
                     message['isAutoReply'],
@@ -165,72 +158,101 @@ class _ChatPageState extends State<ChatPage> {
     );
   }
 
-  Widget _buildMessage(String text, bool isAutoReply, Color bgColor, Color textColor) {
+  Widget _buildMessage(
+      String text, bool isAutoReply, Color bgColor, Color textColor) {
     return Align(
       alignment: isAutoReply ? Alignment.centerLeft : Alignment.centerRight,
-      child: Container(
-        padding: EdgeInsets.all(16),
-        margin: EdgeInsets.symmetric(vertical: 4),
-        constraints: BoxConstraints(
-          maxWidth: MediaQuery.of(context).size.width * 0.75,
-        ),
-        decoration: BoxDecoration(
-          color: bgColor,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: Color(0xFFD0D0D0)),
-        ),
-        child: Text(
-          text,
-          style: TextStyle(
-            color: textColor,
-            fontSize: 14,
-            fontFamily: 'Roboto',
-            fontWeight: FontWeight.w400,
-            height: 1.2,
-            letterSpacing: 0.25,
+      child: Row(
+        mainAxisAlignment:
+        isAutoReply ? MainAxisAlignment.start : MainAxisAlignment.end,
+        children: [
+          if (isAutoReply)
+            CircleAvatar(
+              backgroundColor: Colors.grey[200],
+              radius: 16,
+              backgroundImage: NetworkImage(
+                  'https://img.icons8.com/doodle/96/retro-robot.png'),
+            ),
+          SizedBox(width: isAutoReply ? 8 : 0),
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              margin: EdgeInsets.symmetric(vertical: 4),
+              decoration: BoxDecoration(
+                color: bgColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                  bottomLeft:
+                  isAutoReply ? Radius.circular(0) : Radius.circular(12),
+                  bottomRight:
+                  isAutoReply ? Radius.circular(12) : Radius.circular(0),
+                ),
+                border: Border.all(color: Color(0xFFD0D0D0)),
+              ),
+              child: Text(
+                text,
+                style: TextStyle(
+                  color: textColor,
+                  fontSize: 14,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w400,
+                  height: 1.2,
+                  letterSpacing: 0.25,
+                ),
+                softWrap: true,
+                overflow: TextOverflow.visible,
+              ),
+            ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildInitialMessage() {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Image.network(
-          'https://img.icons8.com/doodle/96/retro-robot.png',
-          width: 24,
-          height: 24,
-        ),
-        SizedBox(width: 8),
-        Align(
-          alignment: Alignment.centerLeft,
-          child: Container(
-            padding: EdgeInsets.all(16),
-            margin: EdgeInsets.symmetric(vertical: 4),
-            constraints: BoxConstraints(
-              maxWidth: MediaQuery.of(context).size.width * 0.75,
-            ),
-            decoration: BoxDecoration(
-              color: Color(0xFFEFEFEF),
-              borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: Color(0xFFD0D0D0)),
-            ),
-            child: Text(
-              '무엇이든 물어보세요',
-              style: TextStyle(
-                color: Colors.black,
-                fontSize: 14,
-                fontFamily: 'Roboto',
-                fontWeight: FontWeight.w400,
-                height: 1.2,
-                letterSpacing: 0.25,
+    return Align(
+      alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          CircleAvatar(
+            backgroundColor: Colors.grey[200],
+            radius: 16,
+            backgroundImage:
+            NetworkImage('https://img.icons8.com/doodle/96/retro-robot.png'),
+          ),
+          SizedBox(width: 8),
+          Flexible(
+            child: Container(
+              padding: EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              margin: EdgeInsets.symmetric(vertical: 4),
+              decoration: BoxDecoration(
+                color: Color(0xFFEFEFEF),
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(12),
+                  topRight: Radius.circular(12),
+                  bottomLeft: Radius.circular(0),
+                  bottomRight: Radius.circular(12),
+                ),
+                border: Border.all(color: Color(0xFFD0D0D0)),
+              ),
+              child: Text(
+                '무엇이든 물어보세요',
+                style: TextStyle(
+                  color: Colors.black,
+                  fontSize: 14,
+                  fontFamily: 'Roboto',
+                  fontWeight: FontWeight.w400,
+                  height: 1.2,
+                  letterSpacing: 0.25,
+                ),
+                softWrap: true,
+                overflow: TextOverflow.visible,
               ),
             ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }
