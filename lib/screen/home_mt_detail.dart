@@ -19,45 +19,46 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   List<dynamic> _trails = [];
   List<List<dynamic>> _spots = [];
   bool _isLoading = true;
+  Map<String, dynamic>? _mountain;
+  int? _mountIdx;
+  bool _containsMountIdx=false;
 
-  // final List<Map<String, String>> courseDetails = [
-  //   {'difficulty': '쉬움', 'time': '1시간', 'distance': '2.5km'},
-  //   {'difficulty': '보통', 'time': '1시간 30분', 'distance': '3.0km'},
-  //   {'difficulty': '어려움', 'time': '2시간', 'distance': '4.5km'},
-  //   {'difficulty': '쉬움', 'time': '45분', 'distance': '1.5km'},
-  //   {'difficulty': '보통', 'time': '2시간 30분', 'distance': '5.0km'},
-  // ];
+  // 데이터를 초기화하는 메서드
+  Future<void> _initializeData() async{
+    // mount_name을 통해 해당 맵을 가져옴
+    _mountain = allMountains?.firstWhere(
+          (mountain) => mountain['mount_name'] == widget.mountainName,
+      orElse: () => null, // 조건에 맞는 항목이 없을 경우 null 반환
+    );
 
-  // final List<List<String>> subCourses = [
-  //   ['1', '2', '3', '4', '5'],
-  //   ['1', '2', '3'],
-  //   ['1', '2', '3', '4'],
-  //   ['1', '2'],
-  //   ['1', '2', '3', '4', '5', '6']
-  // ];
+    // mount_idx를 가져옴
+    _mountIdx = _mountain != null ? _mountain!['mount_idx'] as int? : null;
 
-  @override
-  void initState() {
-    super.initState();
-    //_isOpenList = List.generate(courseDetails.length, (index) => false);
-    _selectTrail();
+    // 추가적인 초기화 작업이 필요하다면 여기서 수행
+    print('Selected Mountain: $_mountain');
+    print('Mount Index: $_mountIdx');
+
+    // _mountIdx가 리스트에 있는지 확인
+    setState(() {
+      _containsMountIdx = favMountains!.any((item) => item['mount_idx'] == _mountIdx);
+      _isLoading = false;
+    });
   }
+
 
   Future<void> _selectTrail() async {
     try {
       List<dynamic> trails = await _trailService.selectTrail(widget.mountainName);
-
       if(trails.isEmpty){
         return;
       }else{
         setState(() {
           _trails = trails;
+          _isOpenList = List.generate(_trails.length, (index) => false);
         });
 
         await _selectSpot();
-
-        _isOpenList = List.generate(_trails.length, (index) => false);
-
+        await _initializeData(); // 데이터를 초기화하는 메서드 호출
 
       }
 
@@ -82,20 +83,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         // 가져온 스팟 리스트를 추가
         allSpots.add(spots);
       }
-
-      // 가져온 스팟 리스트 출력 (테스트용)
-      print(allSpots);
-
       if(allSpots.isEmpty){
+        _isLoading = false;
         return;
       }else{
         setState(() {
           _spots = allSpots;
-          _isLoading = false;
         });
       }
-      // 필요에 따라 상태에 추가
-
 
     } catch (e) {
       print("Error fetching spots: $e");
@@ -106,12 +101,23 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   }
 
 
+  @override
+  void initState() {
+    super.initState();
+    //_isOpenList = List.generate(courseDetails.length, (index) => false);
+    _selectTrail();
+  }
 
 
   @override
   Widget build(BuildContext context) {
 
-    if(_isLoading){
+    final screenWidth = MediaQuery
+        .of(context)
+        .size
+        .width;
+
+    if(_isLoading)
       return Scaffold(
         appBar: AppBar(
           title: Text('${widget.mountainName} 코스 리스트'),
@@ -127,12 +133,8 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         ),
         body: Center(child: CircularProgressIndicator()),
       );
-    }
 
-    final screenWidth = MediaQuery
-        .of(context)
-        .size
-        .width;
+
 
     return Scaffold(
       backgroundColor: Color(0xFFF5F5F5),
@@ -156,17 +158,19 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
             // 산 이름, 별 버튼
             _buildStyledButton(
               widget.mountainName,
-              trailingIcon: favoriteItems.contains(widget.mountainName)
+              trailingIcon: _containsMountIdx
                   ? Icons.star
                   : Icons.star_border,
               onTrailingIconPressed: () {
                 setState(() {
-                  if (favoriteItems.contains(widget.mountainName)) {
-                    favoriteItems.remove(widget.mountainName);
+                  if (_containsMountIdx) {
+                    favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
                   } else {
-                    favoriteItems.add(widget.mountainName);
+                    favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
                   }
                 });
+                // _containsMountIdx를 상태에 맞게 업데이트
+                _containsMountIdx = !_containsMountIdx;
               },
             ),
             SizedBox(height: 20),

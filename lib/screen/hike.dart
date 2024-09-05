@@ -83,13 +83,14 @@ class _HikeState extends State<Hike> {
   void initState() {
     super.initState();
     _loadTimerValue(); // 앱 시작 시 저장된 타이머 값 불러오기
+    _initialize();
   }
 
 
 
 Future<void> _initialize() async{
   WidgetsFlutterBinding.ensureInitialized();
-
+  Location location = Location();
   final LocationData currentLocation = await location.getLocation();
 
   double nx = (currentLocation.latitude!);
@@ -464,8 +465,6 @@ Future<void> _initialize() async{
                     ),
                 ],
               ),
-              backgroundColor: Colors.grey[200],
-              elevation: 0,
               foregroundColor: Colors.black,
               actions: selectedTrail != null && !_isTracking
                   ? [
