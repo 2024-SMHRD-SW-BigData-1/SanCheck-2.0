@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
+import 'package:sancheck/provider/mountain_provider.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/service/auth_service.dart';
 import 'package:sancheck/service/mountain_service.dart';
@@ -24,6 +26,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   Map<String, dynamic>? _mountain;
   int? _mountIdx;
   bool _containsMountIdx=false;
+
 
   // 데이터를 초기화하는 메서드
   Future<void> _initializeData() async{
@@ -106,6 +109,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final mountainProvider = Provider.of<MountainProvider>(context); // Provider 접근
 
     final screenWidth = MediaQuery
         .of(context)
@@ -162,12 +166,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                       favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
                     });
                     await _removeFavMountain(_mountIdx!, userModel!.userId);
+                    mountainProvider.updateFavMountain();
 
                   } else { // favMt에 추가
                     setState(() {
                       favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
                     });
                     await _addFavMountain(_mountIdx!, userModel!.userId);
+                    mountainProvider.updateFavMountain();
                   }
                   // _containsMountIdx를 상태에 맞게 업데이트
                   setState(() {
@@ -313,7 +319,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
                   // 길찾기 버튼 클릭 콜백
-                  onPressed:  () async{
+                  onPressed:  () {
                     selectedMountain = allMountains!.firstWhere(
                           (element) => element['mount_name'] == widget.mountainName,
                       orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
