@@ -10,7 +10,7 @@ class Community extends StatefulWidget {
 class _CommunityState extends State<Community> {
   List<Map<String, dynamic>> _posts = []; // 게시물 리스트
   List<TextEditingController> _commentControllers = []; // 각 게시물에 대한 댓글 입력 컨트롤러 리스트
-  int _selectedCategory = 0; // 선택된 카테고리 상태
+  int _selectedCategory = 0; // 선택된 카테고리 상태 (0: 실시간 게시물, 1: 등산기록)
 
   void _showPostDialog(BuildContext context) async {
     final newPost = await showDialog<Map<String, dynamic>>(
