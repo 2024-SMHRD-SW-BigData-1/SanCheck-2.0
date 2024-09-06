@@ -12,39 +12,6 @@ import 'package:sancheck/screen/weather.dart';
 import 'package:sancheck/screen/hike_record.dart'; // HikeRecordModal 정의 파일
 import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await NaverMapSdk.instance.initialize(
-    clientId: '119m2j9zpj',
-    onAuthFailed: (ex) {
-      print("********* 네이버맵 인증오류 : $ex *********");
-    },
-  );
-
-  Location location = Location();
-  if (!await location.serviceEnabled() && !await location.requestService()) {
-    return;
-  }
-
-  if (await location.hasPermission() == PermissionStatus.denied &&
-      await location.requestPermission() != PermissionStatus.granted) {
-    return;
-  }
-
-  runApp(const MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Hike(),
-    );
-  }
-}
 
 class Hike extends StatefulWidget {
   const Hike({super.key});
@@ -192,12 +159,6 @@ class _HikeState extends State<Hike> {
     });
   }
 
-  void _onNavItemSelected(String value) {
-    setState(() {
-      _selectedItem = value;
-    });
-  }
-
   void _showWeatherModal() {
     showDialog(
       context: context,
@@ -211,6 +172,9 @@ class _HikeState extends State<Hike> {
   Future<void> _captureImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    
+    // 사진이 찍혔을 때
+    // 해야되는 것  1) 운동 기록 플라스크에 보내서 이미지로 저장  2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 분석 된 산 가져오기
     if (pickedFile != null) {
       setState(() {
         _capturedImage = File(pickedFile.path);
@@ -226,6 +190,34 @@ class _HikeState extends State<Hike> {
     } else {
       _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
     }
+  }
+
+  Future<void> _showHikeRecodeModal() async {
+    await showDialog(
+      context: context,
+      barrierColor: Colors.black.withOpacity(0.5), // 모달 밖 배경 어둡게 설정
+      builder: (BuildContext context) {
+        return HikeRecordModal();
+        // return Dialog(
+        //   backgroundColor: Colors.white, // 모달의 배경을 하얗게 설정
+        //   shape: RoundedRectangleBorder(
+        //     borderRadius: BorderRadius.circular(20.0),
+        //   ),
+        //   child: HikeRecordModal(), // 기존의 HikeRecordModal 위젯
+        // );
+      },
+    );
+  }
+
+  void _showMedalModal() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return MedalModal(
+          medalImageUrl: 'https://example.com/medal.png', // 실제 메달 이미지 URL로 교체
+        );
+      },
+    );
   }
 
   void _toggleTracking() {
