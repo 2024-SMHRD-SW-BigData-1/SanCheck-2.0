@@ -75,11 +75,10 @@ class _MyPageState extends State<MyPage> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20.0),
       child: UserProfile(
-        userLevel: int.parse(userModel!.userLevel), // userLevel을 int로 변환
-        nickname: userModel!.userName, iconUrl: '',
+        userLevel: 1, // 원하는 레벨을 설정하세요
+        nickname: userModel!.userName,
+        iconUrl: 'https://img.icons8.com/color/96/babys-room.png',
       ),
-
-
     );
   }
 
