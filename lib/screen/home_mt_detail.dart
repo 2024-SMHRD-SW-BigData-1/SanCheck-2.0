@@ -28,32 +28,9 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   bool _containsMountIdx=false;
 
 
-  // 데이터를 초기화하는 메서드
-  Future<void> _initializeData() async{
-    // mount_name을 통해 해당 맵을 가져옴
-    _mountain = allMountains?.firstWhere(
-          (mountain) => mountain['mount_name'] == widget.mountainName,
-      orElse: () => null, // 조건에 맞는 항목이 없을 경우 null 반환
-    );
-
-    // mount_idx를 가져옴
-    _mountIdx = _mountain != null ? _mountain!['mount_idx'] as int? : null;
-
-    // 추가적인 초기화 작업이 필요하다면 여기서 수행
-    print('Selected Mountain: $_mountain');
-    print('Mount Index: $_mountIdx');
-
-    // _mountIdx가 리스트에 있는지 확인
-    setState(() {
-      _containsMountIdx = favMountains!.any((item) => item['mount_idx'] == _mountIdx);
-      _isLoading = false;
-    });
-  }
-
-
   Future<void> _selectTrail() async {
     try {
-      List<dynamic> trails = await _trailService.selectTrail(widget.mountainName);
+      List<dynamic> trails = await _trailService.selectTrailByMountName(widget.mountainName);
       if(trails.isEmpty){
         return;
       } else {
@@ -98,6 +75,28 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
     }
   }
 
+  // 데이터를 초기화하는 메서드
+  Future<void> _initializeData() async{
+    // mount_name을 통해 해당 맵을 가져옴
+    _mountain = allMountains?.firstWhere(
+          (mountain) => mountain['mount_name'] == widget.mountainName,
+      orElse: () => null, // 조건에 맞는 항목이 없을 경우 null 반환
+    );
+
+    // mount_idx를 가져옴
+    _mountIdx = _mountain != null ? _mountain!['mount_idx'] as int? : null;
+
+    // 추가적인 초기화 작업이 필요하다면 여기서 수행
+    print('Selected Mountain: $_mountain');
+    print('Mount Index: $_mountIdx');
+
+    // _mountIdx가 리스트에 있는지 확인
+    setState(() {
+      _containsMountIdx = favMountains!.any((item) => item['mount_idx'] == _mountIdx);
+      _isLoading = false;
+    });
+  }
+
 
   @override
   void initState() {
@@ -116,7 +115,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         .size
         .width;
 
-    if(_isLoading)
+    if(_isLoading) {
       return Scaffold(
         appBar: AppBar(
           title: Text('${widget.mountainName} 코스 리스트'),
@@ -132,6 +131,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         ),
         body: Center(child: CircularProgressIndicator()),
       );
+    }
 
 
     return Scaffold(
