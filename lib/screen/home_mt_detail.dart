@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
+import 'package:sancheck/provider/mountain_provider.dart';
 import 'package:sancheck/screen/login_success.dart';
+import 'package:sancheck/service/auth_service.dart';
+import 'package:sancheck/service/mountain_service.dart';
 import 'package:sancheck/service/trail_service.dart';
 
 class HomeMtDetail extends StatefulWidget {
@@ -13,8 +17,8 @@ class HomeMtDetail extends StatefulWidget {
 }
 
 class _HomeMtDetailState extends State<HomeMtDetail> {
-  TrailService _trailService = TrailService();
-  Set<String> favoriteItems = {};
+  final TrailService _trailService = TrailService();
+  final MountainService _mountainService = MountainService();
   List<bool> _isOpenList = [];
   List<dynamic> _trails = [];
   List<List<dynamic>> _spots = [];
@@ -23,32 +27,10 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
   int? _mountIdx;
   bool _containsMountIdx=false;
 
-  // 데이터를 초기화하는 메서드
-  Future<void> _initializeData() async{
-    // mount_name을 통해 해당 맵을 가져옴
-    _mountain = allMountains?.firstWhere(
-          (mountain) => mountain['mount_name'] == widget.mountainName,
-      orElse: () => null, // 조건에 맞는 항목이 없을 경우 null 반환
-    );
-
-    // mount_idx를 가져옴
-    _mountIdx = _mountain != null ? _mountain!['mount_idx'] as int? : null;
-
-    // 추가적인 초기화 작업이 필요하다면 여기서 수행
-    print('Selected Mountain: $_mountain');
-    print('Mount Index: $_mountIdx');
-
-    // _mountIdx가 리스트에 있는지 확인
-    setState(() {
-      _containsMountIdx = favMountains!.any((item) => item['mount_idx'] == _mountIdx);
-      _isLoading = false;
-    });
-  }
-
 
   Future<void> _selectTrail() async {
     try {
-      List<dynamic> trails = await _trailService.selectTrail(widget.mountainName);
+      List<dynamic> trails = await _trailService.selectTrailByMountName(widget.mountainName);
       if(trails.isEmpty){
         return;
       } else {
@@ -93,6 +75,28 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
     }
   }
 
+  // 데이터를 초기화하는 메서드
+  Future<void> _initializeData() async{
+    // mount_name을 통해 해당 맵을 가져옴
+    _mountain = allMountains?.firstWhere(
+          (mountain) => mountain['mount_name'] == widget.mountainName,
+      orElse: () => null, // 조건에 맞는 항목이 없을 경우 null 반환
+    );
+
+    // mount_idx를 가져옴
+    _mountIdx = _mountain != null ? _mountain!['mount_idx'] as int? : null;
+
+    // 추가적인 초기화 작업이 필요하다면 여기서 수행
+    print('Selected Mountain: $_mountain');
+    print('Mount Index: $_mountIdx');
+
+    // _mountIdx가 리스트에 있는지 확인
+    setState(() {
+      _containsMountIdx = favMountains!.any((item) => item['mount_idx'] == _mountIdx);
+      _isLoading = false;
+    });
+  }
+
 
   @override
   void initState() {
@@ -104,13 +108,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
 
   @override
   Widget build(BuildContext context) {
+    final mountainProvider = Provider.of<MountainProvider>(context); // Provider 접근
 
     final screenWidth = MediaQuery
         .of(context)
         .size
         .width;
 
-    if(_isLoading)
+    if(_isLoading) {
       return Scaffold(
         appBar: AppBar(
           title: Text('${widget.mountainName} 코스 리스트'),
@@ -126,6 +131,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
         ),
         body: Center(child: CircularProgressIndicator()),
       );
+    }
 
 
     return Scaffold(
@@ -151,18 +157,33 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               trailingIcon: _containsMountIdx
                   ? Icons.star
                   : Icons.star_border,
-              onTrailingIconPressed: () {
-                setState(() {
-                  if (_containsMountIdx) {
-                    favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
-                  } else {
-                    favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
+              
+              // 별 버튼 클릭
+              onTrailingIconPressed: () async {
+
+                  if (_containsMountIdx) { //favMt에서 제거
+                    setState(() {
+                      favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
+                    });
+                    await _removeFavMountain(_mountIdx!, userModel!.userId);
+                    mountainProvider.updateFavMountain();
+
+                  } else { // favMt에 추가
+                    setState(() {
+                      favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
+                    });
+                    await _addFavMountain(_mountIdx!, userModel!.userId);
+                    mountainProvider.updateFavMountain();
                   }
-                });
-                // _containsMountIdx를 상태에 맞게 업데이트
-                _containsMountIdx = !_containsMountIdx;
+                  // _containsMountIdx를 상태에 맞게 업데이트
+                  setState(() {
+                    _containsMountIdx = !_containsMountIdx;
+                  });
+
+
+
               },
-            ),
+              ),
             SizedBox(height: 20),
             Expanded(
               child: ListView.separated(
@@ -298,7 +319,7 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
                 padding: EdgeInsets.only(left: 10),
                 child: ElevatedButton(
                   // 길찾기 버튼 클릭 콜백
-                  onPressed:  () async{
+                  onPressed:  () {
                     selectedMountain = allMountains!.firstWhere(
                           (element) => element['mount_name'] == widget.mountainName,
                       orElse: () => null, // 조건에 맞는 값이 없을 경우 null 반환
@@ -458,4 +479,14 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
       },
     );
   }
+
+  Future<void> _addFavMountain(int mountIdx, String userId)async {
+    await _mountainService.addFavMountain(mountIdx, userId);
+  }
+
+  Future<void> _removeFavMountain(int mountIdx, String userId)async {
+    await _mountainService.removeFavMountain(mountIdx, userId);
+  }
+
+
 }
