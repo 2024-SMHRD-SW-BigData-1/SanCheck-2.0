@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:location/location.dart';
+import 'package:pedometer/pedometer.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
@@ -62,6 +63,54 @@ class _HikeState extends State<Hike> {
   static const weatherIconUrl = 'https://img.icons8.com/fluency/96/weather.png';
   static const clockIconUrl = 'https://img.icons8.com/color/96/clock-pokemon.png';
 
+  // 위도, 경도, LineString 배열 생성
+  List<double> loc_lst_lat = [];
+  List<double> loc_lst_lon = [];
+  List<double> loc_lst = [];
+
+  // pedometer로 운동 데이터 로딩
+  late Stream<StepCount> _stepCountStream;
+  late Stream<PedestrianStatus> _pedestrianStatusStream;
+  int _initialSteps = 0;
+  int _currentSteps = 0;
+  int _stepsOffset = 0;
+  double _useCal = 0;
+  double rounded_use_cal = 0;
+
+  void onStepCount(StepCount event) {
+    setState(() {
+      _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
+      _useCal = _currentSteps * 70.0 * 0.0005;
+      rounded_use_cal = double.parse(_useCal.toStringAsFixed(2));
+    });
+  }
+
+  void onStepCountError(error) {
+    print('Step Count Error: $error');
+  }
+
+  Future<void> initPlatformState() async {
+    _stepCountStream = Pedometer.stepCountStream;
+
+    _stepCountStream.listen((event) {
+      if (_initialSteps == 0) {
+        setState(() {
+          _initialSteps = event.steps; // 최초의 걸음 수 저장
+        });
+      }
+      onStepCount(event);
+    }).onError(onStepCountError);
+  }
+
+  void resetSteps() {
+    setState(() {
+      _stepsOffset = _currentSteps + _stepsOffset; // 오프셋 업데이트
+      _currentSteps = 0; // 걸음 수 리셋
+    });
+  }
+
+
+
   String _selectedItem = '등산하기';
   NLatLng? _currentPosition;
   NCameraPosition _cameraPosition = const NCameraPosition(
@@ -84,62 +133,63 @@ class _HikeState extends State<Hike> {
     super.initState();
     _loadTimerValue(); // 앱 시작 시 저장된 타이머 값 불러오기
     _initialize();
+    initPlatformState();
   }
 
 
 
-Future<void> _initialize() async{
-  WidgetsFlutterBinding.ensureInitialized();
-  Location location = Location();
-  final LocationData currentLocation = await location.getLocation();
+  Future<void> _initialize() async{
+    WidgetsFlutterBinding.ensureInitialized();
+    Location location = Location();
+    final LocationData currentLocation = await location.getLocation();
 
-  double nx = (currentLocation.latitude!);
-  double ny = (currentLocation.longitude!);
+    double nx = (currentLocation.latitude!);
+    double ny = (currentLocation.longitude!);
 
 
 
-  _cameraPosition = NCameraPosition(
-  target: NLatLng(nx, ny),
-  zoom: 10,
-  bearing: 0,
-  tilt: 0,
-  );
-  // 네이버 앱 인증
-  await NaverMapSdk.instance.initialize(
-    clientId: '119m2j9zpj',
-    onAuthFailed: (ex) {
-    print("********* 네이버맵 인증오류 : $ex *********");
-    },
-  );
+    _cameraPosition = NCameraPosition(
+      target: NLatLng(nx, ny),
+      zoom: 10,
+      bearing: 0,
+      tilt: 0,
+    );
+    // 네이버 앱 인증
+    await NaverMapSdk.instance.initialize(
+      clientId: '119m2j9zpj',
+      onAuthFailed: (ex) {
+        print("********* 네이버맵 인증오류 : $ex *********");
+      },
+    );
 
-  // 위치 서비스 확인 및 요청
-  bool _serviceEnabled = await location.serviceEnabled();
-  if (!_serviceEnabled) {
-    _serviceEnabled = await location.requestService();
+    // 위치 서비스 확인 및 요청
+    bool _serviceEnabled = await location.serviceEnabled();
     if (!_serviceEnabled) {
-      return;
+      _serviceEnabled = await location.requestService();
+      if (!_serviceEnabled) {
+        return;
+      }
     }
-  }
 
-  // 위치 권한 확인 및 요청
-  PermissionStatus _permissionGranted = await location.hasPermission();
-  if (_permissionGranted == PermissionStatus.denied) {
-    _permissionGranted = await location.requestPermission();
-    if (_permissionGranted != PermissionStatus.granted) {
-      return;
+    // 위치 권한 확인 및 요청
+    PermissionStatus _permissionGranted = await location.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await location.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
+        return;
+      }
     }
+    await _loadTimerValue();  // 앱 시작 시 저장된 타이머 값 불러오기
+
+
+    // 경로 정보 set
+    setState(() {
+      _coords = selectedTrail!['trail_path']!.map<NLatLng>((point) {
+        return NLatLng(point['x'], point['y']);
+      }).toList();
+    });
+
   }
-  await _loadTimerValue();  // 앱 시작 시 저장된 타이머 값 불러오기
-
-
-  // 경로 정보 set
-  setState(() {
-    _coords = selectedTrail!['trail_path']!.map<NLatLng>((point) {
-      return NLatLng(point['x'], point['y']);
-    }).toList();
-  });
-
-}
 
 // spot을 지도에 추가하는 함수
   Future<void> addSpotsToMap(controller) async {
@@ -243,7 +293,7 @@ Future<void> _initialize() async{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          child: HikeRecordModal(), // 기존의 HikeRecordModal 위젯
+          child: HikeRecordModal(currentSteps : _currentSteps), // 기존의 HikeRecordModal 위젯
         );
       },
     ).then((_) {
@@ -410,10 +460,10 @@ Future<void> _initialize() async{
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if(selectedTrail!=null && !_isTracking)
-                        Text(
-                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
-                          style: TextStyle(fontSize: 16),
-                        ),
+                    Text(
+                      '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                      style: TextStyle(fontSize: 16),
+                    ),
                   if(selectedTrail==null && !_isTracking)
                     Text(
                       '선택된 등산로: 없음 ',
@@ -516,10 +566,10 @@ Future<void> _initialize() async{
                       addSpotsToMap(controller);
 
                       controller.updateCamera(NCameraUpdate.withParams(
-                        target: NLatLng(double.parse(selectedMountain!['mount_latitude']), double.parse(selectedMountain!['mount_longitude'])),
-                        zoom: 11,
-                        bearing: 0,
-                        tilt: 0
+                          target: NLatLng(double.parse(selectedMountain!['mount_latitude']), double.parse(selectedMountain!['mount_longitude'])),
+                          zoom: 11,
+                          bearing: 0,
+                          tilt: 0
                       ));
                     }
                   },

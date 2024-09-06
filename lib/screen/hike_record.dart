@@ -1,6 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:pedometer/pedometer.dart';
 
-class HikeRecordModal extends StatelessWidget {
+class HikeRecordModal extends StatefulWidget {
+  final int currentSteps;
+
+  HikeRecordModal({
+    Key? key,
+    required this.currentSteps,
+}) : super(key: key);
+
+  @override
+  State<HikeRecordModal> createState() => _HikeRecordModalState();
+
+}
+
+class _HikeRecordModalState extends State<HikeRecordModal> {
+
   @override
   Widget build(BuildContext context) {
     return Dialog(
@@ -79,13 +94,13 @@ class HikeRecordModal extends StatelessWidget {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoRow(Icons.access_time, '전체 시간', '02:05:59'),
+                          _buildInfoRow(Icons.access_time, '전체 시간', "2시간 59분"),
                           SizedBox(height: 16),
                           _buildInfoRow(Icons.directions_walk, '운동 거리', '5.9 km'),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.directions_run, '걸음수', '500걸음'),
+                          _buildInfoRow(Icons.directions_run, '걸음수', widget.currentSteps.toString()),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', '120 kcal'),
+                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', "200"),
                         ],
                       ),
                     ],
