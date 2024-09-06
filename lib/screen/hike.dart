@@ -78,11 +78,9 @@ class _HikeState extends State<Hike> {
   double rounded_use_cal = 0;
 
   void onStepCount(StepCount event) {
-    setState(() {
       _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
       _useCal = _currentSteps * 70.0 * 0.0005;
       rounded_use_cal = double.parse(_useCal.toStringAsFixed(2));
-    });
   }
 
   void onStepCountError(error) {
