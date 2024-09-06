@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'dart:io'; // 추가
+import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:sancheck/globals.dart';
@@ -13,6 +15,40 @@ import 'package:sancheck/screen/weather.dart';
 import 'package:sancheck/screen/hike_record.dart'; // HikeRecordModal 정의 파일
 import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
 
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  await NaverMapSdk.instance.initialize(
+    clientId: '119m2j9zpj',
+    onAuthFailed: (ex) {
+      print("********* 네이버맵 인증오류 : $ex *********");
+    },
+  );
+
+  Location location = Location();
+  if (!await location.serviceEnabled() && !await location.requestService()) {
+    return;
+  }
+
+  if (await location.hasPermission() == PermissionStatus.denied &&
+      await location.requestPermission() != PermissionStatus.granted) {
+    return;
+  }
+
+  runApp(const MyApp());
+}
+
+
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      home: Hike(),
+    );
+  }
+}
 
 class Hike extends StatefulWidget {
   const Hike({super.key});
@@ -42,6 +78,8 @@ class _HikeState extends State<Hike> {
   int _stepsOffset = 0;
   double _useCal = 0;
   double rounded_use_cal = 0;
+
+  final _storage = FlutterSecureStorage();
 
   void onStepCount(StepCount event) {
       _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
@@ -228,7 +266,89 @@ class _HikeState extends State<Hike> {
     );
   }
 
-  // 이미지 촬영 함수 수정
+
+  Location _location = Location();
+  void get_route() async{
+    try{
+      var get_location = await _location.getLocation();
+      double? now_lat = get_location.latitude;
+      double? now_lon = get_location.longitude;
+
+      if (now_lat != null && now_lon != null) {
+        resetSteps();
+    }
+    }catch (e) {
+      print("Error getting location : $e");
+    }
+  }
+
+  void reset_route(){
+    loc_lst_lat.clear();
+    loc_lst_lon.clear();
+  }
+
+  Future<void> save_route() async {
+    Dio dio = Dio();
+
+    loc_lst.clear();
+
+    for(int i = 0; i < loc_lst_lat.length; i++){
+      loc_lst.add(loc_lst_lat[i]);
+      loc_lst.add(loc_lst_lon[i]);
+    }
+
+    if(loc_lst.isEmpty){
+      print("Error : Location list is empty");
+      return;
+    }
+
+    String combinedString = loc_lst.asMap().entries.map((entry) {
+      if(entry.key % 2 == 0){
+        return '${loc_lst[entry.key]} ${loc_lst[entry.key + 1]}';
+      } else {
+        return null;
+      }
+    }).where((element) => element != null).join(', ');
+
+    String linestring = "LineString($combinedString}";
+
+    String url = "http://192.168.219.167:/8000/mountain/upload";
+
+    try{
+      Response res = await dio.post(url, data: {
+        "user_id": "test",
+        "trail_idx" : 1,
+        "hiking_date": DateTime.now().toIso8601String(),
+        "hiking_steps": _currentSteps,
+        "hiking_state": true,
+        "hiking_time": "실제 시간",
+        "hiking_route": linestring
+      });
+
+      print(res.statusCode);
+      print(res.realUri);
+      getImg();
+    } catch (e) {
+      print('Error sending request: $e');
+    }
+  }
+
+
+void getImg() async{
+    Dio dio = Dio();
+    String? user_name = await _storage.read(key: "user");
+    String url = "http://192.168.219.167:5050/drawMap";
+
+    try{
+      Response res = await dio.get(url, queryParameters: {
+        "user_id" : user_name
+      });
+    }catch (e){
+      print("Error sending request: $e");
+    }
+}
+
+  // 데이터 업로드 기점으로 설정
   Future<void> _captureImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
