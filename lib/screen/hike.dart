@@ -257,6 +257,12 @@ class _HikeState extends State<Hike> {
     });
   }
 
+  void _onNavItemSelected(String value) {
+    setState(() {
+      _selectedItem = value;
+    });
+  }
+
   void _showWeatherModal() {
     showDialog(
       context: context,
@@ -352,9 +358,6 @@ void getImg() async{
   Future<void> _captureImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
-    
-    // 사진이 찍혔을 때
-    // 해야되는 것  1) 운동 기록 플라스크에 보내서 이미지로 저장  2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 분석 된 산 가져오기
     if (pickedFile != null) {
       setState(() {
         _capturedImage = File(pickedFile.path);
@@ -372,8 +375,8 @@ void getImg() async{
     }
   }
 
-  Future<void> _showHikeRecodeModal() async {
-    await showDialog(
+  void _showHikeRecodeModal() {
+    showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5), // 모달 밖 배경 어둡게 설정
       builder: (BuildContext context) {
@@ -385,7 +388,10 @@ void getImg() async{
           child: HikeRecordModal(currentSteps : _currentSteps), // 기존의 HikeRecordModal 위젯
         );
       },
-    );
+    ).then((_) {
+      // HikeRecordModal이 닫힌 후 카메라 촬영 기능 실행
+      _captureImage();
+    });
   }
 
   void _showMedalModal() {
@@ -480,8 +486,9 @@ void getImg() async{
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () {
-                      Navigator.of(context).pop();
-                      _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
+                      _resetTimer();
+                      Navigator.of(context).pop(); // 모달창 닫기 후 상태 초기화
+                      _showHikeRecodeModal(); // 등산 기록 모달 호출
                     },
                     child: Text(
                       '예',
@@ -658,12 +665,12 @@ void getImg() async{
               title: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (selectedTrail != null && !_isTracking)
+                  if(selectedTrail!=null && !_isTracking)
                     Text(
                       '선택된 등산로: ${selectedTrail!['trail_name']} ',
                       style: TextStyle(fontSize: 16),
                     ),
-                  if (selectedTrail == null && !_isTracking)
+                  if(selectedTrail==null && !_isTracking)
                     Text(
                       '선택된 등산로: 없음 ',
                       style: TextStyle(fontSize: 16),

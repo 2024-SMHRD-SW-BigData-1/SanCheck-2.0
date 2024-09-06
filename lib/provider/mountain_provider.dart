@@ -1,7 +1,6 @@
 // providers/mountain_provider.dart
 import 'package:flutter/material.dart';
 import 'package:sancheck/service/mountain_service.dart';
-import 'package:sancheck/globals.dart'; // 전역 변수가 있는 파일 import
 
 class MountainProvider extends ChangeNotifier {
   final MountainService _mountainService = MountainService();
@@ -11,14 +10,6 @@ class MountainProvider extends ChangeNotifier {
 
   List<dynamic>? get mountain => _mountain;
   String? get searchText => _searchText;
-
-  // favMountains의 getter
-  List<dynamic>? get providerFavMountains => favMountains;
-
-  // favMountains 업데이트 시 상태 변화 알림
-  void updateFavMountain() {
-    notifyListeners(); // 상태 변화 알림
-  }
 
   // 산 검색 메서드
   Future<void> searchMountain(String queryText) async {

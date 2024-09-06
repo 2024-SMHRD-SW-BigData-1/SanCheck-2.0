@@ -82,9 +82,11 @@ class MountainService {
       print('Status Code: ${res.statusCode}');
       print('Response Data: ${res.data}');
 
-      print(res.data['message']);
-
-
+      if (res.data['success']) {
+        // return res.data['mountain']; // 성공 시 데이터 리스트 반환
+      } else {
+        throw Exception('검색 실패');
+      }
     } catch (e) {
       print('Error occurred: $e');
       throw Exception('서버 요청 실패');
@@ -92,19 +94,22 @@ class MountainService {
   }
 
   // 관심있는 산 제거
-  Future<void> removeFavMountain(int mountIdx, String userId) async {
+  Future<void> removeFavMountain() async {
     try {
       String url = "http://192.168.219.200:8000/mountain/removeFavMountain";
       Response res = await dio.get(url, queryParameters: {
-        'mountIdx' : mountIdx,
-        'userId' : userId
+
       });
 
       print('Request URL: ${res.realUri}');
       print('Status Code: ${res.statusCode}');
       print('Response Data: ${res.data}');
 
-        print(res.data['message']);
+      if (res.data['success']) {
+        return res.data['mountain']; // 성공 시 데이터 리스트 반환
+      } else {
+        throw Exception('검색 실패');
+      }
     } catch (e) {
       print('Error occurred: $e');
       throw Exception('서버 요청 실패');
