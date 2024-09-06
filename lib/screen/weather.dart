@@ -92,15 +92,19 @@ class _WeatherModalState extends State<WeatherModal> {
 
   @override
   Widget build(BuildContext context) {
+  // 현재 날짜 및 시간 가져오기 (UTC 기준)
+    DateTime now = DateTime.now().toUtc();
 
-    // 현재 날짜 및 시간 가져오기
-    DateTime now = DateTime.now();
+    // UTC 기준으로 9시간을 더해 한국 시간으로 변환
+    DateTime kstNow = now.add(Duration(hours: 9));
 
     // 분을 00으로 고정한 새로운 DateTime 객체 생성
-    DateTime modifiedNow = DateTime(now.year, now.month, now.day, now.hour, 0);
+    DateTime modifiedNow = DateTime(kstNow.year, kstNow.month, kstNow.day, kstNow.hour, 0);
 
     // 날짜 및 시간 포맷 설정 (예: '2024/09/03 14:00')
     String formattedDate = DateFormat('yyyy/MM/dd HH:mm').format(modifiedNow);
+
+    print(formattedDate); // 올바른 한국 시간대 출력
 
     // 로딩 상태일 때 로딩 인디케이터 표시
 
@@ -193,7 +197,7 @@ class _WeatherModalState extends State<WeatherModal> {
                 formattedDate,
                 style: TextStyle(
                   color: Color(0xFF1E1E1E),
-                  fontSize: 8,
+                  fontSize: 14,
                 ),
               ),
             if (!_isLoading)

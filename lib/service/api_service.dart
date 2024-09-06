@@ -16,7 +16,7 @@ class ApiService {
 
       print('Request URL: ${res.realUri}');
       print('Status Code: ${res.statusCode}');
-      print('Response Data: ${res.data}');
+      // print('Response Data: ${res.data}');
 
       // 요청 결과를 반환
       return {
@@ -43,7 +43,7 @@ class ApiService {
 
       print('Request URL: ${res.realUri}');
       print('Status Code: ${res.statusCode}');
-      print('Response Data: ${res.data}');
+      // print('Response Data: ${res.data}');
 
       bool isSuccessed = res.data['success'];
       var jsonData = res.data['data'];
