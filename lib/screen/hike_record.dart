@@ -1,12 +1,13 @@
 import 'package:flutter/material.dart';
-import 'package:pedometer/pedometer.dart';
 
 class HikeRecordModal extends StatefulWidget {
   final int currentSteps;
+  final double roundedUseCal;
 
   HikeRecordModal({
     Key? key,
     required this.currentSteps,
+    required this.roundedUseCal
 }) : super(key: key);
 
   @override
@@ -100,7 +101,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                           SizedBox(height: 16),
                           _buildInfoRow(Icons.directions_run, '걸음수', widget.currentSteps.toString()),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', "200"),
+                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', widget.roundedUseCal.toString()),
                         ],
                       ),
                     ],
