@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io'; // 추가
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
@@ -273,17 +274,25 @@ class _HikeState extends State<Hike> {
 
   Location _location = Location();
   void get_route() async{
-    try{
-      var get_location = await _location.getLocation();
-      double? now_lat = get_location.latitude;
-      double? now_lon = get_location.longitude;
+    reset_route();
+    print("경로 저장");
+      try{
+        print("데이터 업로드");
+        var get_location = await _location.getLocation();
+        double? now_lat = get_location.latitude;
+        double? now_lon = get_location.longitude;
 
-      if (now_lat != null && now_lon != null) {
+        if (now_lat != null && now_lon != null){
+          loc_lst_lat.add(now_lat);
+          loc_lst_lon.add(now_lon);
+        }
+        print("lat : ${now_lat}");
+        print("lon : ${now_lon}");
+
         resetSteps();
-    }
-    }catch (e) {
-      print("Error getting location : $e");
-    }
+      }catch (e){
+        print("Error getting location: $e");
+      }
   }
 
   void reset_route(){
@@ -291,22 +300,16 @@ class _HikeState extends State<Hike> {
     loc_lst_lon.clear();
   }
 
-  Future<void> save_route() async {
-    Dio dio = Dio();
+  String combinedString = "";
 
-    loc_lst.clear();
+  void get_route_lst () {
 
     for(int i = 0; i < loc_lst_lat.length; i++){
       loc_lst.add(loc_lst_lat[i]);
       loc_lst.add(loc_lst_lon[i]);
     }
 
-    if(loc_lst.isEmpty){
-      print("Error : Location list is empty");
-      return;
-    }
-
-    String combinedString = loc_lst.asMap().entries.map((entry) {
+    combinedString = loc_lst.asMap().entries.map((entry) {
       if(entry.key % 2 == 0){
         return '${loc_lst[entry.key]} ${loc_lst[entry.key + 1]}';
       } else {
@@ -314,13 +317,30 @@ class _HikeState extends State<Hike> {
       }
     }).where((element) => element != null).join(', ');
 
-    String linestring = "LineString($combinedString}";
+  }
 
-    String url = "http://192.168.219.167:/8000/mountain/upload";
+  Future<void> save_route() async {
+    get_route();
+    Dio dio = Dio();
+
+    if(loc_lst.isEmpty){
+      print("Error : Location list is empty");
+      return;
+    }
+
+    String linestring = "LineString($combinedString)";
+
+    String url = "http://192.168.219.204:8000/mountain/upload";
+    print("currentSteps : $_currentSteps");
+    String? user = await _storage.read(key: "user");
+    Map<String, dynamic> userMap = jsonDecode(user!);
+    String? user_id = userMap['user_id'];
+    print("user_id : ${user_id}");
+    print("lineStirng : $linestring");
 
     try{
       Response res = await dio.post(url, data: {
-        "user_id": "test",
+        "user_id": user_id,
         "trail_idx" : 1,
         "hiking_date": DateTime.now().toIso8601String(),
         "hiking_steps": _currentSteps,
@@ -331,6 +351,7 @@ class _HikeState extends State<Hike> {
 
       print(res.statusCode);
       print(res.realUri);
+
       getImg();
     } catch (e) {
       print('Error sending request: $e');
@@ -379,7 +400,7 @@ void getImg() async{
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0),
           ),
-          child: HikeRecordModal(currentSteps : _currentSteps), // 기존의 HikeRecordModal 위젯
+          child: HikeRecordModal(currentSteps : _currentSteps, roundedUseCal: rounded_use_cal,), // 기존의 HikeRecordModal 위젯
         );
       },
     ).then((_) {
@@ -413,9 +434,16 @@ void getImg() async{
   }
 
   void _startTimer() {
+    int cnt = 0;
+
     _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
+      cnt++;
+      print(cnt);
       _secondsNotifier.value++;
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
+      if(cnt % 8 == 0){
+        get_route_lst();
+      }
     });
   }
 
@@ -498,7 +526,8 @@ void getImg() async{
     );
   }
 
-  void _resetTimer() {
+  void _resetTimer() async{
+    await save_route();
     _pauseTimer();
     setState(() {
       _isTracking = false;
