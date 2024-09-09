@@ -5,7 +5,7 @@ import 'package:sancheck/provider/hike_provider.dart';
 
 class HikeRecordModal extends StatelessWidget {
 
-    final int currentSteps;
+  final int currentSteps;
   final double roundedUseCal;
 
   HikeRecordModal({

@@ -21,41 +21,6 @@ import 'package:sancheck/screen/weather.dart';
 import 'package:sancheck/screen/hike_record.dart'; // HikeRecordModal 정의 파일
 import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await NaverMapSdk.instance.initialize(
-    clientId: '119m2j9zpj',
-    onAuthFailed: (ex) {
-      print("********* 네이버맵 인증오류 : $ex *********");
-    },
-  );
-
-  Location location = Location();
-  if (!await location.serviceEnabled() && !await location.requestService()) {
-    return;
-  }
-
-  if (await location.hasPermission() == PermissionStatus.denied &&
-      await location.requestPermission() != PermissionStatus.granted) {
-    return;
-  }
-
-  runApp(const MyApp());
-}
-
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Hike(),
-    );
-  }
-}
-
 class Hike extends StatefulWidget {
   const Hike({super.key});
 
@@ -66,6 +31,16 @@ class Hike extends StatefulWidget {
 class _HikeState extends State<Hike> {
   static const weatherIconUrl = 'https://img.icons8.com/fluency/96/weather.png';
   static const clockIconUrl = 'https://img.icons8.com/color/96/clock-pokemon.png';
+
+  Future<void> _initializeNaverMapSdk() async {
+    // 네이버 앱 인증
+    await NaverMapSdk.instance.initialize(
+      clientId: '119m2j9zpj',
+      onAuthFailed: (ex) {
+        print("********* 네이버맵 인증오류 : $ex *********");
+      },
+    );
+  }
 
   // 위도, 경도, LineString 배열 생성
   List<double> loc_lst_lat = [];
