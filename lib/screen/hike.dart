@@ -446,8 +446,11 @@ class _TimerButtonsState extends State<TimerButtons> {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
-    // 사진이 찍혔을 때
-    // 해야되는 것  1) 운동 기록 플라스크에 보내서 이미지로 저장  2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 분석 된 산 가져오기
+    // 사진이 찍으면 동시에
+    // 해야되는 것  
+    // 1) 운동 기록 플라스크에 보내서 이미지로 저장  
+    // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
+    // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
       setState(() {
         _capturedImage = File(pickedFile.path);
@@ -456,9 +459,9 @@ class _TimerButtonsState extends State<TimerButtons> {
       // 조건 체크 후 메달 모달 띄우기
       bool conditionMet = _capturedImage != null; // 실제 조건 체크 로직으로 교체
       if (conditionMet) {
-        _showMedalModal(); // 메달 모달을 띄우고
+        _showMedalModal(); // 조건 일치하면 메달 제작 로직
       } else {
-        _showHikeRecodeModal(); // 조건을 만족하지 않으면 등산 기록 모달로 이동
+        _showPhotoOptionModal(); // 조건을 만족하지 않으면 다시 사진 찍을건지 물어보기
       }
     } else {
       _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
