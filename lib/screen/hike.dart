@@ -210,7 +210,7 @@ class _HikeState extends State<Hike> {
           icon: image,
           position: NLatLng(double.parse(spot['spot_latitude']),double.parse(spot['spot_longitude'])), // 마커의 위치 설정
           size: Size(20, 25), // 마커의 크기 설정
-          caption: NOverlayCaption(text: spot['spot_name'], textSize: 12.0),
+          caption: NOverlayCaption(text: spot['spot_name'], textSize: 12.0, color: spot['spot_danger']=='t'?Colors.red:Colors.black),
           isHideCollidedSymbols: true,
         );
 
