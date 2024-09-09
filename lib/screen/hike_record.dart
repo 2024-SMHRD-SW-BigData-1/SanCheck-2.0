@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
+import 'package:sancheck/globals.dart';
+import 'package:sancheck/provider/hike_provider.dart';
 
 class HikeRecordModal extends StatefulWidget {
   final int currentSteps;
@@ -16,6 +19,16 @@ class HikeRecordModal extends StatefulWidget {
 }
 
 class _HikeRecordModalState extends State<HikeRecordModal> {
+class HikeRecordModal extends StatelessWidget {
+
+  String _formatTime(int seconds) {
+    final int minutes = seconds ~/ 60;
+    final int hours = minutes ~/ 60;
+    final int remainingMinutes = minutes % 60;
+    final int remainingSeconds = seconds % 60;
+
+    return '${hours.toString().padLeft(2, '0')}:${remainingMinutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,7 +75,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                         TextSpan(
                           children: [
                             TextSpan(
-                              text: '무등산옛길 1구간 \n',
+                              text: selectedTrail!=null ? '등산로 : ${selectedTrail!['trail_name']} \n': '등산로 :  선택되지 않음 \n',
                               style: TextStyle(
                                 color: Color(0xFF1E1E1E),
                                 fontSize: 16,
@@ -71,7 +84,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                               ),
                             ),
                             TextSpan(
-                              text: '청암교 ➡ 충장사 ➡ 원효사',
+                              text: selectedSpots!=null ? '${selectedSpots![0]['spot_name']} ➡ ${selectedSpots![1]['spot_name']} ➡ ${selectedSpots![2]['spot_name']} ...' : '',
                               style: TextStyle(
                                 color: Color(0xFF1E1E1E),
                                 fontSize: 16,
@@ -95,7 +108,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          _buildInfoRow(Icons.access_time, '전체 시간', "2시간 59분"),
+                          _buildInfoRow(Icons.access_time, '전체 시간', _formatTime(context.watch<HikeProvider>().secondNotifier)),
                           SizedBox(height: 16),
                           _buildInfoRow(Icons.directions_walk, '운동 거리', '5.9 km'),
                           SizedBox(height: 16),
