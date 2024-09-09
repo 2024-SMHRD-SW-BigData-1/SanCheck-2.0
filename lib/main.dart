@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:sancheck/provider/hike_provider.dart';
 import 'package:sancheck/provider/mountain_provider.dart';
 import 'package:sancheck/screen/loading_page.dart';
 import 'package:sancheck/screen/login_success.dart';
@@ -12,8 +13,11 @@ import 'package:sancheck/test/weather_api_test.dart';
 
 void main() {
   runApp(
-    ChangeNotifierProvider(
-      create: (context) => MountainProvider(),
+    MultiProvider(
+        providers: [
+          ChangeNotifierProvider(create: (context) => MountainProvider()),
+          ChangeNotifierProvider(create: (context) => HikeProvider()),
+        ],
       child: MyApp(),
     ),
   );

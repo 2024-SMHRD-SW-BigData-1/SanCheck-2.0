@@ -59,14 +59,6 @@ class GpxNavigationState extends State<GpxNavigation> {
       tilt: 0,
     );
 
-    // 네이버 앱 인증
-    await NaverMapSdk.instance.initialize(
-      clientId: '119m2j9zpj',
-      onAuthFailed: (ex) {
-        print("********* 네이버맵 인증오류 : $ex *********");
-      },
-    );
-
     // 위치 서비스 확인 및 요청
     bool serviceEnabled = await location.serviceEnabled();
     if (!serviceEnabled) {
@@ -88,7 +80,13 @@ class GpxNavigationState extends State<GpxNavigation> {
 
   // Naver Map SDK 초기화
   Future<void> _initializeNaverMapSdk() async {
-    await NaverMapSdk.instance.initialize(clientId: '119m2j9zpj');
+    // 네이버 앱 인증
+    await NaverMapSdk.instance.initialize(
+      clientId: '119m2j9zpj',
+      onAuthFailed: (ex) {
+        print("********* 네이버맵 인증오류 : $ex *********");
+      },
+    );
   }
 
 
