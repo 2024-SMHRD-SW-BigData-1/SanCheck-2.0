@@ -125,6 +125,7 @@ class _HikeState extends State<Hike> {
                         ),
                       if (selectedTrail != null && hikeProvider.isTracking)
                         Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               '선택된 등산로: ${selectedTrail!['trail_name']} ',
@@ -376,12 +377,17 @@ class _TimerButtonsState extends State<TimerButtons> {
           ),
           title: Center(
             child: Text(
-              '사진 촬영을 하시겠습니까?',
+              '사진 촬영?',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
               ),
             ),
+          ),
+          content: Text(
+            '정상석 촬영 시 스탬프 획득 가능!',
+            textAlign: TextAlign.center,
+            style: TextStyle(fontSize: 18),
           ),
           actions: <Widget>[
             Row(
@@ -480,13 +486,6 @@ class _TimerButtonsState extends State<TimerButtons> {
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
         return HikeRecordModal();
-        // return Dialog(
-        //   backgroundColor: Colors.white,
-        //   shape: RoundedRectangleBorder(
-        //     borderRadius: BorderRadius.circular(20.0),
-        //   ),
-        //   child: HikeRecordModal(),
-        // );
       },
     ).then((_) {
       // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
