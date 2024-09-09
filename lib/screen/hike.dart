@@ -243,6 +243,7 @@ class _HikeState extends State<Hike> {
     _secondsNotifier.value = savedSeconds;
   }
 
+  // 위치 발견 후 세팅
   void getLoc() async {
     Location location = Location();
     var loc = await location.getLocation();
@@ -275,15 +276,22 @@ class _HikeState extends State<Hike> {
 
 
   Location _location = Location();
+
+
+  // 현재 위치를 리스트에 추가
   void get_route() async{
+    // 경로 초기화
     reset_route();
     print("경로 저장");
       try{
         print("데이터 업로드");
+
+        // 현재 위치 받아오기
         var get_location = await _location.getLocation();
         double? now_lat = get_location.latitude;
         double? now_lon = get_location.longitude;
 
+        // 받아온 위치 리스트에 저장
         if (now_lat != null && now_lon != null){
           loc_lst_lat.add(now_lat);
           loc_lst_lon.add(now_lon);
@@ -304,6 +312,7 @@ class _HikeState extends State<Hike> {
 
   String combinedString = "";
 
+  // 저장된 경로 리스트를 lineString 형태로 전환
   void get_route_lst () {
 
     for(int i = 0; i < loc_lst_lat.length; i++){
@@ -311,6 +320,7 @@ class _HikeState extends State<Hike> {
       loc_lst.add(loc_lst_lon[i]);
     }
 
+    // Linestring 형태로 전환
     combinedString = loc_lst.asMap().entries.map((entry) {
       if(entry.key % 2 == 0){
         return '${loc_lst[entry.key]} ${loc_lst[entry.key + 1]}';
@@ -321,6 +331,7 @@ class _HikeState extends State<Hike> {
 
   }
 
+  // 저장된 lineStiring 형태의 경로를 DB에 업로드
   Future<void> save_route() async {
     get_route();
     Dio dio = Dio();
@@ -339,6 +350,9 @@ class _HikeState extends State<Hike> {
     String? user_id = userMap['user_id'];
     print("user_id : ${user_id}");
     print("lineStirng : $linestring");
+
+
+    print(selectedTrail);
 
     try{
       Response res = await dio.post(url, data: {
@@ -360,7 +374,7 @@ class _HikeState extends State<Hike> {
     }
   }
 
-
+  // 저장된 경로를 통해 지도에 이미지로 그려 저장
 void getImg() async{
     Dio dio = Dio();
     String? user_name = await _storage.read(key: "user");
