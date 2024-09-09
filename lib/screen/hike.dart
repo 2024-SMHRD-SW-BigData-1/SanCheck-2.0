@@ -250,7 +250,10 @@ class _HikeState extends State<Hike> {
   // 현재 위치를 리스트에 추가
   void get_route() async{
     // 경로 초기화
+    reset_route();
     print("경로 저장");
+      try{
+        print("데이터 업로드");
 
         // 현재 위치 받아오기
         var get_location = await _location.getLocation();
@@ -265,6 +268,10 @@ class _HikeState extends State<Hike> {
         print("lat : ${now_lat}");
         print("lon : ${now_lon}");
 
+        resetSteps();
+      }catch (e){
+        print("Error getting location: $e");
+      }
   }
 
   void reset_route(){
@@ -295,7 +302,7 @@ class _HikeState extends State<Hike> {
 
   // 저장된 lineStiring 형태의 경로를 DB에 업로드
   Future<void> save_route() async {
-    get_route_lst();
+    get_route();
     Dio dio = Dio();
 
     if(loc_lst.isEmpty){
@@ -313,7 +320,8 @@ class _HikeState extends State<Hike> {
     print("user_id : ${user_id}");
     print("lineStirng : $linestring");
 
-    print("trail_idx : $selectedTrail");
+
+    print(selectedTrail);
 
     try{
       Response res = await dio.post(url, data: {
@@ -600,8 +608,13 @@ class _TimerButtonsState extends State<TimerButtons> {
       _secondsNotifier.value++;
       hikeProvider.updateSecondNotifier(_secondsNotifier.value);
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
+<<<<<<< HEAD
       if (cnt % 2 == 0) {
         get_route();
+=======
+      if(cnt % 8 == 0){
+        get_route_lst();
+>>>>>>> parent of d801d00 (값 로딩 성공)
       }
     });
   }
@@ -676,8 +689,13 @@ class _TimerButtonsState extends State<TimerButtons> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12), // 버튼의 높이 조정
                     ),
+<<<<<<< HEAD
                     onPressed: () async {
                       await _resetTimer();
+=======
+                    onPressed: () {
+                      _resetTimer();
+>>>>>>> parent of d801d00 (값 로딩 성공)
                       Navigator.of(context).pop(); // 모달창 닫기 후 상태 초기화
                       _showHikeRecodeModal(); // 등산 기록 모달 호출
                     },
@@ -778,7 +796,11 @@ class _TimerButtonsState extends State<TimerButtons> {
     );
   }
 
+<<<<<<< HEAD
   Future<void> _resetTimer() async {
+=======
+  void _resetTimer() async{
+>>>>>>> parent of d801d00 (값 로딩 성공)
     await save_route();
     // 이미지 촬영 함수 수정
     Future<void> _captureImage() async {
