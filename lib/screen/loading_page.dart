@@ -93,7 +93,8 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
                   if (status.isDenied) {
                     _showPermissionSettingsDialog();
                   } else if (status.isGranted) {
-                    _readLoginInfo();
+                    await _selectAllMountain();
+                    await _readLoginInfo();
                   }
                 },
                 child: Text('권한 요청'),

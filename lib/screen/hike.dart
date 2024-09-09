@@ -287,7 +287,7 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 저장된 타이머 불러오기
   Future<void> _loadTimerValue() async {
-    int savedSeconds = _prefs!.getInt('timer_value') ?? 0;
+    int savedSeconds = _prefs?.getInt('timer_value') ?? 0;
     _secondsNotifier.value = savedSeconds;
   }
 
@@ -453,10 +453,10 @@ class _TimerButtonsState extends State<TimerButtons> {
     // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
     // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
-      await _sendImageToFlask();
       setState(() {
         _capturedImage = File(pickedFile.path);
       });
+      await _sendImageToFlask(_capturedImage!);
 
       // 조건 체크 후 메달 모달 띄우기
       bool conditionMet = _capturedImage != null; // 실제 조건 체크 로직으로 교체
@@ -472,8 +472,9 @@ class _TimerButtonsState extends State<TimerButtons> {
 
 
 
-  Future<void> _sendImageToFlask () async {
+  Future<void> _sendImageToFlask (File imageFile) async {
     FlaskService flaskService = FlaskService();
+    flaskService.sendImageToFlask(imageFile);
     flaskService.flaskTest();
   }
 
@@ -504,15 +505,15 @@ class _TimerButtonsState extends State<TimerButtons> {
     ).then((_) {
       // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
       if (Navigator.canPop(context)) {
-        _resetTimer();
         Navigator.pop(context); // 등산하기 페이지로 이동
-      } else {
         _resetTimer();
+      } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
           ),
         );
+        _resetTimer();
       }
     });
   }

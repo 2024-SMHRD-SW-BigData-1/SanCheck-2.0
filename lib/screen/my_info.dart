@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/delete_id.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/screen/user_profile.dart'; // UserProfile 위젯을 import
@@ -40,7 +41,7 @@ class MyInfo extends StatelessWidget {
                 padding: const EdgeInsets.symmetric(horizontal: 20.0),
                 child: UserProfile(
                   userLevel: 1,
-                  nickname: '팜하니',
+                  nickname: userModel!.userName,
                   iconUrl: 'https://img.icons8.com/color/96/babys-room.png',
                 ),
               ),
@@ -75,7 +76,7 @@ class MyInfo extends StatelessWidget {
                     InfoRow(
                       icon: "https://img.icons8.com/ios-glyphs/90/FA5252/ringer-volume.png",
                       label: '전화번호',
-                      value: '010-1111-5555',
+                      value: userModel!.userPhone,
                       iconSize: screenWidth * 0.08,
                       circleRadius: screenWidth * 0.1,
                     ),
@@ -83,7 +84,7 @@ class MyInfo extends StatelessWidget {
                     InfoRow(
                       icon: "https://img.icons8.com/tiny-color/64/new-post.png",
                       label: '이메일',
-                      value: 'qwer@googole.com',
+                      value: userModel!.userId,
                       iconSize: screenWidth * 0.08,
                       circleRadius: screenWidth * 0.1,
                     ),
@@ -91,7 +92,7 @@ class MyInfo extends StatelessWidget {
                     InfoRow(
                       icon: "https://img.icons8.com/tiny-color/64/gender.png",
                       label: '성별',
-                      value: '여',
+                      value: userModel!.userGender=='M' ? '남' : '여',
                       iconSize: screenWidth * 0.08,
                       circleRadius: screenWidth * 0.1,
                     ),
