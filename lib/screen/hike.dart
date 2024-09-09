@@ -600,7 +600,7 @@ class _TimerButtonsState extends State<TimerButtons> {
       _secondsNotifier.value++;
       hikeProvider.updateSecondNotifier(_secondsNotifier.value);
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
-      if(cnt % 2 == 0){
+      if (cnt % 2 == 0) {
         get_route();
       }
     });
@@ -623,7 +623,8 @@ class _TimerButtonsState extends State<TimerButtons> {
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // 모달창 배경색을 하얀색으로 설정
+          backgroundColor: Colors.white,
+          // 모달창 배경색을 하얀색으로 설정
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(20.0), // 둥근 모서리 설정
           ),
@@ -660,7 +661,8 @@ class _TimerButtonsState extends State<TimerButtons> {
                     },
                     child: Text(
                       '아니오',
-                      style: TextStyle(color: Colors.white, fontSize: 16), // 글씨 크기 2p 키움
+                      style: TextStyle(
+                          color: Colors.white, fontSize: 16), // 글씨 크기 2p 키움
                     ),
                   ),
                 ),
@@ -674,22 +676,22 @@ class _TimerButtonsState extends State<TimerButtons> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12), // 버튼의 높이 조정
                     ),
-                    onPressed: () async{
+                    onPressed: () async {
                       await _resetTimer();
                       Navigator.of(context).pop(); // 모달창 닫기 후 상태 초기화
                       _showHikeRecodeModal(); // 등산 기록 모달 호출
                     },
                     child: Text(
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
-                    },
-                    child: Text(
-                      '예',
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
+                      },
+                      child: Text(
+                        '예',
+                        style: TextStyle(color: Colors.white, fontSize: 16),
+                      ),
                     ),
                   ),
-                ),
                 )
               ],
             ),
@@ -763,7 +765,8 @@ class _TimerButtonsState extends State<TimerButtons> {
                     },
                     child: Text(
                       '예',
-                      style: TextStyle(color: Colors.white, fontSize: 16), // 글씨 크기 2p 키움
+                      style: TextStyle(
+                          color: Colors.white, fontSize: 16), // 글씨 크기 2p 키움
                     ),
                   ),
                 ),
@@ -775,162 +778,164 @@ class _TimerButtonsState extends State<TimerButtons> {
     );
   }
 
-  Future<void> _resetTimer() async{
+  Future<void> _resetTimer() async {
     await save_route();
-  // 이미지 촬영 함수 수정
-  Future<void> _captureImage() async {
-    final picker = ImagePicker();
-    final pickedFile = await picker.pickImage(source: ImageSource.camera);
+    // 이미지 촬영 함수 수정
+    Future<void> _captureImage() async {
+      final picker = ImagePicker();
+      final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
-    // 사진이 찍혔을 때
-    // 해야되는 것  1) 운동 기록 플라스크에 보내서 이미지로 저장  2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 분석 된 산 가져오기
-    if (pickedFile != null) {
+      // 사진이 찍혔을 때
+      // 해야되는 것  1) 운동 기록 플라스크에 보내서 이미지로 저장  2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 분석 된 산 가져오기
+      if (pickedFile != null) {
+        setState(() {
+          _capturedImage = File(pickedFile.path);
+        });
+
+        // 조건 체크 후 메달 모달 띄우기
+        bool conditionMet = _capturedImage != null; // 실제 조건 체크 로직으로 교체
+        if (conditionMet) {
+          _showMedalModal(); // 메달 모달을 띄우고
+        } else {
+          _showHikeRecodeModal(); // 조건을 만족하지 않으면 등산 기록 모달로 이동
+        }
+      } else {
+        _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
+      }
+    }
+
+    // 메달 모달을 닫으면 등산 기록 모달을 호출
+    void _showMedalModal() {
+      showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return MedalModal(
+            medalImageUrl: 'https://example.com/medal.png',
+          );
+        },
+      ).then((_) {
+        _showHikeRecodeModal(); // 메달 모달이 닫힌 후 등산 기록 모달 호출
+      });
+    }
+
+    // 등산 기록 모달
+    void _showHikeRecodeModal() {
+      showDialog(
+        context: context,
+        barrierColor: Colors.black.withOpacity(0.5),
+        builder: (BuildContext context) {
+          return HikeRecordModal();
+        },
+      ).then((_) {
+        // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
+        if (Navigator.canPop(context)) {
+          _resetTimer();
+          Navigator.pop(context); // 등산하기 페이지로 이동
+        } else {
+          _resetTimer();
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (context) =>
+                  LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
+            ),
+          );
+        }
+      });
+    }
+
+    // 타이머 초기화
+    void _resetTimer() {
+      _pauseTimer();
+
+      // Provider에서 HikeProvider 인스턴스를 가져옵니다.
+      final hikeProvider = context.read<HikeProvider>();
+
       setState(() {
-        _capturedImage = File(pickedFile.path);
+        _isTracking = false;
+        _isPaused = false;
+        _secondsNotifier.value = 0;
+        _saveTimerValue(0); // 타이머 값 초기화 후 저장
       });
 
-      // 조건 체크 후 메달 모달 띄우기
-      bool conditionMet = _capturedImage != null; // 실제 조건 체크 로직으로 교체
-      if (conditionMet) {
-        _showMedalModal(); // 메달 모달을 띄우고
-      } else {
-        _showHikeRecodeModal(); // 조건을 만족하지 않으면 등산 기록 모달로 이동
-      }
-    } else {
-      _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
+      // Provider의 상태 초기화
+      hikeProvider.resetTracking(); // Provider의 초기화 메서드를 호출
+      hikeProvider.resetSecond();
     }
-  }
 
-  // 메달 모달을 닫으면 등산 기록 모달을 호출
-  void _showMedalModal() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return MedalModal(
-          medalImageUrl: 'https://example.com/medal.png',
-        );
-      },
-    ).then((_) {
-      _showHikeRecodeModal(); // 메달 모달이 닫힌 후 등산 기록 모달 호출
-    });
-  }
-
-  // 등산 기록 모달
-  void _showHikeRecodeModal() {
-    showDialog(
-      context: context,
-      barrierColor: Colors.black.withOpacity(0.5),
-      builder: (BuildContext context) {
-        return HikeRecordModal();
-      },
-    ).then((_) {
-      // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
-      if (Navigator.canPop(context)) {
-        _resetTimer();
-        Navigator.pop(context); // 등산하기 페이지로 이동
-      } else {
-        _resetTimer();
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(
-            builder: (context) => LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
-          ),
-        );
-      }
-    });
-  }
-
-  // 타이머 초기화
-  void _resetTimer() {
-    _pauseTimer();
-
-    // Provider에서 HikeProvider 인스턴스를 가져옵니다.
-    final hikeProvider = context.read<HikeProvider>();
-
-    setState(() {
-      _isTracking = false;
-      _isPaused = false;
-      _secondsNotifier.value = 0;
-      _saveTimerValue(0); // 타이머 값 초기화 후 저장
-    });
-
-    // Provider의 상태 초기화
-    hikeProvider.resetTracking(); // Provider의 초기화 메서드를 호출
-    hikeProvider.resetSecond();
-  }
-
-  @override
-  void initState() {
-    super.initState();
-    _loadTimerValue();
-    _initPrefs();
-  }
+    @override
+    void initState() {
+      super.initState();
+      _loadTimerValue();
+      _initPrefs();
+    }
 
 
-  @override
-  void dispose() {
-    _timer?.cancel();
-    _secondsNotifier.dispose();
-    super.dispose();
-  }
+    @override
+    void dispose() {
+      _timer?.cancel();
+      _secondsNotifier.dispose();
+      super.dispose();
+    }
 
-  @override
-  Widget build(BuildContext context) {
-    final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
-    return Positioned(
-      bottom: 20,
-      left: 0,
-      right: 0,
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          if (!_isTracking) // 타이머가 작동 중이지 않을 때 Go 버튼만 표시
-            IconButton(
-              icon: Image.network(
-                goIconUrl,
-                width: 48,
-                height: 48,
-              ),
-              onPressed: (){
-                _toggleTracking();
-                hikeProvider.toggleTracking();
-              },
-            ),
-          if (_isTracking) // 타이머가 작동 중일 때는 버튼을 업데이트
-            Row(
-              children: [
-                IconButton(
-                  icon: Image.network(
-                    _isPaused ? playIconUrl : pauseIconUrl,
-                    width: 48,
-                    height: 48,
-                  ),
-                  onPressed: () {
-                    if (_isPaused) {
-                      setState(() {
-                        _isPaused = !_isPaused;
-                        _startTimer();
-                      });
-                    } else {
-                      setState(() {
-                        _isPaused = !_isPaused;
-                        _pauseTimer();
-                      });
-                    }
-                  },
+    @override
+    Widget build(BuildContext context) {
+      final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
+      return Positioned(
+        bottom: 20,
+        left: 0,
+        right: 0,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (!_isTracking) // 타이머가 작동 중이지 않을 때 Go 버튼만 표시
+              IconButton(
+                icon: Image.network(
+                  goIconUrl,
+                  width: 48,
+                  height: 48,
                 ),
-                if (_isPaused) // 타이머가 멈춘 상태에서만 stop(빨간색 네모) 아이콘을 표시
+                onPressed: () {
+                  _toggleTracking();
+                  hikeProvider.toggleTracking();
+                },
+              ),
+            if (_isTracking) // 타이머가 작동 중일 때는 버튼을 업데이트
+              Row(
+                children: [
                   IconButton(
                     icon: Image.network(
-                      stopIconUrl,
-                      width: 32,
-                      height: 32,
+                      _isPaused ? playIconUrl : pauseIconUrl,
+                      width: 48,
+                      height: 48,
                     ),
-                    onPressed: _confirmStop, // stop 아이콘 클릭 시 초기화
+                    onPressed: () {
+                      if (_isPaused) {
+                        setState(() {
+                          _isPaused = !_isPaused;
+                          _startTimer();
+                        });
+                      } else {
+                        setState(() {
+                          _isPaused = !_isPaused;
+                          _pauseTimer();
+                        });
+                      }
+                    },
                   ),
-              ],
-            ),
-        ],
-      ),
-    );
+                  if (_isPaused) // 타이머가 멈춘 상태에서만 stop(빨간색 네모) 아이콘을 표시
+                    IconButton(
+                      icon: Image.network(
+                        stopIconUrl,
+                        width: 32,
+                        height: 32,
+                      ),
+                      onPressed: _confirmStop, // stop 아이콘 클릭 시 초기화
+                    ),
+                ],
+              ),
+          ],
+        ),
+      );
+    }
   }
 }
