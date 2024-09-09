@@ -10,6 +10,7 @@ import 'package:sancheck/provider/hike_provider.dart';
 import 'package:sancheck/screen/hike_map.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:sancheck/screen/login_success.dart';
+import 'package:sancheck/service/flask_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
 import 'package:image_picker/image_picker.dart'; // 이미지 픽커 추가
 import 'package:sancheck/screen/weather.dart';
@@ -452,6 +453,7 @@ class _TimerButtonsState extends State<TimerButtons> {
     // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
     // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
+      await _sendImageToFlask();
       setState(() {
         _capturedImage = File(pickedFile.path);
       });
@@ -467,6 +469,15 @@ class _TimerButtonsState extends State<TimerButtons> {
       _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
     }
   }
+
+
+
+  Future<void> _sendImageToFlask () async {
+    FlaskService flaskService = FlaskService();
+    flaskService.flaskTest();
+  }
+
+
 
   // 메달 모달을 닫으면 등산 기록 모달을 호출
   void _showMedalModal() {
