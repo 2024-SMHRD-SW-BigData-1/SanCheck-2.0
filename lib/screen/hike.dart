@@ -21,40 +21,6 @@ import 'package:sancheck/screen/weather.dart';
 import 'package:sancheck/screen/hike_record.dart'; // HikeRecordModal 정의 파일
 import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-
-  await NaverMapSdk.instance.initialize(
-    clientId: '119m2j9zpj',
-    onAuthFailed: (ex) {
-      print("********* 네이버맵 인증오류 : $ex *********");
-    },
-  );
-
-  Location location = Location();
-  if (!await location.serviceEnabled() && !await location.requestService()) {
-    return;
-  }
-
-  if (await location.hasPermission() == PermissionStatus.denied &&
-      await location.requestPermission() != PermissionStatus.granted) {
-    return;
-  }
-
-  runApp(const MyApp());
-}
-
-
-class MyApp extends StatelessWidget {
-  const MyApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      home: Hike(),
-    );
-  }
-}
 
 class Hike extends StatefulWidget {
   const Hike({super.key});
@@ -71,6 +37,8 @@ class _HikeState extends State<Hike> {
   List<double> loc_lst_lat = [];
   List<double> loc_lst_lon = [];
   List<double> loc_lst = [];
+
+
 
   // pedometer로 운동 데이터 로딩
   late Stream<StepCount> _stepCountStream;
@@ -263,7 +231,7 @@ class _HikeState extends State<Hike> {
     });
   }
 
-  }
+
 
   // 날씨 api 모달
   void _showWeatherModal() {
@@ -722,6 +690,7 @@ class _TimerButtonsState extends State<TimerButtons> {
                     ),
                   ),
                 ),
+                )
               ],
             ),
           ],
