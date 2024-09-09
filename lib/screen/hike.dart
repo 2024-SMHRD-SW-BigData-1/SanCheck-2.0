@@ -4,7 +4,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
 import 'package:location/location.dart';
+import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
+import 'package:sancheck/provider/hike_provider.dart';
 import 'package:sancheck/screen/hike_map.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:sancheck/screen/login_success.dart';
@@ -75,7 +77,7 @@ class _HikeState extends State<Hike> {
 
   @override
   Widget build(BuildContext context) {
-    final timerButtonState = context.findAncestorStateOfType<_TimerButtonsState>();
+    // final hikeProvider = Provider.of<HikeProvider>(context);
 
     return FutureBuilder<void>(
       future: _initializeNaverMapSdk(),
@@ -93,80 +95,81 @@ class _HikeState extends State<Hike> {
             appBar: AppBar(
               backgroundColor: Colors.white, // AppBar 전체 배경을 흰색으로 설정
               elevation: 0, // 그림자 제거
-              title: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  if (selectedTrail != null && !timerButtonState!.isTracking)
-                    Text(
-                      '선택된 등산로: ${selectedTrail!['trail_name']} ',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  if (selectedTrail == null && !timerButtonState!.isTracking)
-                    Text(
-                      '선택된 등산로: 없음 ',
-                      style: TextStyle(fontSize: 16),
-                    ),
-                  if (selectedTrail == null && timerButtonState!.isTracking)
-                    Row(
-                      children: [
-                        Text(
-                          '경과 시간: ',
-                          style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
-                        ),
-                        ValueListenableBuilder<int>(
-                          valueListenable: timerButtonState.secondsNotifier,
-                          builder: (context, seconds, child) {
-                            return Text(
-                              _formatTime(seconds),
-                              style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
-                            );
-                          },
-                        ),
-                      ],
-                    ),
-                  if (selectedTrail != null && timerButtonState!.isTracking)
-                    Column(
-                      children: [
+              title: Consumer<HikeProvider>(
+                builder: (context, hikeProvider, child) {
+                  return Column(
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (selectedTrail != null && !hikeProvider.isTracking)
                         Text(
                           '선택된 등산로: ${selectedTrail!['trail_name']} ',
                           style: TextStyle(fontSize: 16),
                         ),
+                      if (selectedTrail == null && !hikeProvider.isTracking)
+                        Text(
+                          '선택된 등산로: 없음 ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      if (selectedTrail == null && hikeProvider.isTracking)
                         Row(
                           children: [
                             Text(
                               '경과 시간: ',
-                              style: TextStyle(fontSize: 16),
+                              style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
                             ),
-                            ValueListenableBuilder<int>(
-                              valueListenable: timerButtonState.secondsNotifier,
-                              builder: (context, seconds, child) {
-                                return Text(
-                                  _formatTime(seconds),
-                                  style: TextStyle(fontSize: 16),
-                                );
-                              },
+                            Text(
+                              _formatTime(hikeProvider.secondNotifier),
+                              style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
                             ),
                           ],
                         ),
-                      ],
-                    ),
-                ],
+                      if (selectedTrail != null && hikeProvider.isTracking)
+                        Column(
+                          children: [
+                            Text(
+                              '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  '경과 시간: ',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                Text(
+                                  _formatTime(hikeProvider.secondNotifier),
+                                  style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                    ],
+                  );
+                }
               ),
               foregroundColor: Colors.black,
-              actions: selectedTrail != null && !timerButtonState!.isTracking
-                  ? [
-                IconButton(
-                  icon: Icon(Icons.dangerous),
-                  onPressed: () {
-                    setState(() {
-                      selectedTrail = null;
-                      selectedMountain = null;
-                      selectedSpots = null;
-                    });
+              actions: [
+                Consumer<HikeProvider>(
+                  builder: (context, hikeProvider, child) {
+                    // Consumer 내부에서 List<Widget> 생성 후 반환
+                    if (selectedTrail != null && !hikeProvider.isTracking) {
+                      return IconButton(
+                        icon: Icon(Icons.dangerous),
+                        onPressed: () {
+                          setState(() {
+                            selectedTrail = null;
+                            selectedMountain = null;
+                            selectedSpots = null;
+                          });
+                        },
+                      );
+                    } else {
+                      return Container(); // 빈 위젯을 반환하여 오류 방지
+                    }
                   },
                 ),
-              ]
-                  : [],
+              ],
             ),
             body: Stack(
               children: [
@@ -265,8 +268,12 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 타이머 시작
   void _startTimer() {
+    // Provider에서 HikeProvider 인스턴스를 가져옵니다.
+    final hikeProvider = context.read<HikeProvider>();
+
     _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
       _secondsNotifier.value++;
+      hikeProvider.updateSecondNotifier(_secondsNotifier.value);
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
     });
   }
@@ -500,12 +507,20 @@ class _TimerButtonsState extends State<TimerButtons> {
   // 타이머 초기화
   void _resetTimer() {
     _pauseTimer();
+
+    // Provider에서 HikeProvider 인스턴스를 가져옵니다.
+    final hikeProvider = context.read<HikeProvider>();
+
     setState(() {
       _isTracking = false;
       _isPaused = false;
       _secondsNotifier.value = 0;
       _saveTimerValue(0); // 타이머 값 초기화 후 저장
     });
+
+    // Provider의 상태 초기화
+    hikeProvider.resetTracking(); // Provider의 초기화 메서드를 호출
+    hikeProvider.resetSecond();
   }
 
   @override
@@ -525,6 +540,7 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   @override
   Widget build(BuildContext context) {
+    final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
     return Positioned(
       bottom: 20,
       left: 0,
@@ -539,7 +555,10 @@ class _TimerButtonsState extends State<TimerButtons> {
                 width: 48,
                 height: 48,
               ),
-              onPressed: _toggleTracking,
+              onPressed: (){
+                _toggleTracking();
+                hikeProvider.toggleTracking();
+              },
             ),
           if (_isTracking) // 타이머가 작동 중일 때는 버튼을 업데이트
             Row(
