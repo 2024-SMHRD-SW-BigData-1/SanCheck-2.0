@@ -609,8 +609,13 @@ class _TimerButtonsState extends State<TimerButtons> {
       hikeProvider.updateSecondNotifier(_secondsNotifier.value);
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
 <<<<<<< HEAD
+<<<<<<< HEAD
       if (cnt % 2 == 0) {
         get_route();
+=======
+      if(cnt % 8 == 0){
+        get_route_lst();
+>>>>>>> parent of d801d00 (값 로딩 성공)
 =======
       if(cnt % 8 == 0){
         get_route_lst();
@@ -690,8 +695,13 @@ class _TimerButtonsState extends State<TimerButtons> {
                       padding: EdgeInsets.symmetric(vertical: 12), // 버튼의 높이 조정
                     ),
 <<<<<<< HEAD
+<<<<<<< HEAD
                     onPressed: () async {
                       await _resetTimer();
+=======
+                    onPressed: () {
+                      _resetTimer();
+>>>>>>> parent of d801d00 (값 로딩 성공)
 =======
                     onPressed: () {
                       _resetTimer();
@@ -797,7 +807,11 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
 <<<<<<< HEAD
+<<<<<<< HEAD
   Future<void> _resetTimer() async {
+=======
+  void _resetTimer() async{
+>>>>>>> parent of d801d00 (값 로딩 성공)
 =======
   void _resetTimer() async{
 >>>>>>> parent of d801d00 (값 로딩 성공)
