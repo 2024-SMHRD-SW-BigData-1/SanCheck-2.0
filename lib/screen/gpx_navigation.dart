@@ -1,11 +1,7 @@
-import 'dart:async';
-
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
-import 'package:pedometer/pedometer.dart';
 import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/provider/mountain_provider.dart';
@@ -25,10 +21,6 @@ class GpxNavigation extends StatefulWidget {
 }
 
 class GpxNavigationState extends State<GpxNavigation> {
-
-  // secureStorage, Location package
-  final _storage = FlutterSecureStorage();
-  final Location _location = Location();
 
   NCameraPosition _cameraPosition = const NCameraPosition(
     target: NLatLng(37.5665, 126.978), // 서울 시청
@@ -153,10 +145,6 @@ class GpxNavigationState extends State<GpxNavigation> {
       });
     });
   }
-
-
-
-
 
   @override
   Widget build(BuildContext context) {
