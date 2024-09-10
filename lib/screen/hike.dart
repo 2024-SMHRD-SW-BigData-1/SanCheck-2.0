@@ -650,7 +650,7 @@ class _TimerButtonsState extends State<TimerButtons> {
 
 
   Future<void> _sendImageToFlask (File imageFile) async {
-    await _flaskService.sendImageToFlask(imageFile);
+    await _flaskService.sendHikingResultWithImage(imageFile);
   }
 
 
