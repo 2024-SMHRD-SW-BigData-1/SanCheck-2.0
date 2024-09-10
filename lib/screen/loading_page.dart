@@ -114,7 +114,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       builder: (context) =>
           AlertDialog(
             title: Text('위치 권한 설정'),
-            content: Text('위치 권한이 필요합니다. 설정에서 권한을 허용해 주세요.'),
+            content: Text('이 앱은 위치와 활동 정보 권한이 필요합니다. 권한을 허용해 주세요.'),
             actions: [
               TextButton(
                 onPressed: () {
