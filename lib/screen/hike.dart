@@ -522,10 +522,11 @@ class _TimerButtonsState extends State<TimerButtons> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    onPressed: () {
-                      _resetTimer();
+                    onPressed: () async {
                       Navigator.of(context).pop();
+                      await save_route();
                       _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
+                      await getImg();
                     },
                     child: Text(
                       '예',
@@ -629,11 +630,9 @@ class _TimerButtonsState extends State<TimerButtons> {
     // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
     // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
-
       setState(() {
         _capturedImage = File(pickedFile.path);
       });
-      await getImg();
       await _sendImageToFlask(_capturedImage!);
 
       // 조건 체크 후 메달 모달 띄우기
@@ -696,7 +695,6 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 타이머 초기화
   void _resetTimer() async{
-    await save_route();
     _pauseTimer();
 
     // Provider에서 HikeProvider 인스턴스를 가져옵니다.
