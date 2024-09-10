@@ -475,7 +475,6 @@ class _TimerButtonsState extends State<TimerButtons> {
   Future<void> _sendImageToFlask (File imageFile) async {
     FlaskService flaskService = FlaskService();
     flaskService.sendImageToFlask(imageFile);
-    flaskService.flaskTest();
   }
 
 
