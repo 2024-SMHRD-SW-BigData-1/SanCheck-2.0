@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'mt_memo_modal.dart'; // 팝업 모달 파일 import
+import 'package:intl/intl.dart';
+import 'mt_memo_modal.dart';
 
 class MtMemo extends StatefulWidget {
   final String mountainName;
@@ -27,7 +28,7 @@ class _MtMemoState extends State<MtMemo> {
     },
     {
       'description': '세부 코스 설명이 여기에 나옵니다.',
-      'imageUrl': '', // 이미지가 없는 경우
+      'imageUrl': '',
       'difficulty': '보통\n',
       'time': '2시간\n',
       'distance': '3.0km',
@@ -92,12 +93,12 @@ class _MtMemoState extends State<MtMemo> {
       ),
       floatingActionButton: ClipOval(
         child: Material(
-          color: Colors.transparent, // 투명하게 설정
+          color: Colors.transparent,
           child: InkWell(
-            splashColor: Colors.grey.withOpacity(0.2), // 클릭 시 효과 색상
+            splashColor: Colors.grey.withOpacity(0.2),
             onTap: () => _showAddCourseModal(context),
             child: Container(
-              padding: EdgeInsets.all(12), // 패딩을 통해 버튼 크기 조정
+              padding: EdgeInsets.all(12),
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
                 boxShadow: [
@@ -123,7 +124,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 코스 버튼 위젯 생성 함수
+  // 코스 버튼 생성 위젯
   Widget _buildCourseButton(String title,
       {required String subtitle,
         IconData? trailingIcon,
@@ -194,7 +195,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 수정된 세부 코스 항목 생성 함수
+  // 세부 코스 항목 생성 위젯
   Widget _buildSubCourseItem(Map<String, dynamic> subCourse, double screenWidth) {
     return Container(
       width: screenWidth * 0.92,
@@ -214,7 +215,6 @@ class _MtMemoState extends State<MtMemo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // 이미지가 있을 경우에만 표시
           if (subCourse['imageUrl'] != null &&
               subCourse['imageUrl'].isNotEmpty &&
               Uri.tryParse(subCourse['imageUrl']) != null)
@@ -227,14 +227,15 @@ class _MtMemoState extends State<MtMemo> {
                   image: NetworkImage(subCourse['imageUrl']),
                   fit: BoxFit.cover,
                   onError: (exception, stackTrace) {
-                    print('Error loading image: $exception'); // 이미지 로드 오류 처리
+                    print('Error loading image: $exception');
                   },
                 ),
               ),
             )
           else
-            SizedBox(height: 50, child: Center(child: Text('저장된 등산 기록 이미지가 없습니다.'))),
-          // 코스명 표시
+            SizedBox(
+                height: 50,
+                child: Center(child: Text('저장된 등산 기록 이미지가 없습니다.'))),
           RichText(
             text: TextSpan(
               children: [
@@ -254,7 +255,6 @@ class _MtMemoState extends State<MtMemo> {
             ),
           ),
           SizedBox(height: 8),
-          // 시간 표시
           RichText(
             text: TextSpan(
               children: [
@@ -274,7 +274,6 @@ class _MtMemoState extends State<MtMemo> {
             ),
           ),
           SizedBox(height: 8),
-          // 거리 표시
           RichText(
             text: TextSpan(
               children: [
@@ -298,10 +297,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-
-
-
-  // 삭제 확인 팝업 호출 함수
+  // 삭제 확인 팝업 호출
   void _showDeleteConfirmation(BuildContext context, int index) {
     showDialog(
       context: context,
@@ -392,7 +388,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 이미지 팝업 위젯
+  // 이미지 팝업 위젯 호출
   void _showImagePopup(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
@@ -440,7 +436,7 @@ class _MtMemoState extends State<MtMemo> {
     );
   }
 
-  // 코스 추가 모달 호출 함수
+  // 코스 추가 모달 호출
   void _showAddCourseModal(BuildContext context) {
     showDialog(
       context: context,
@@ -453,9 +449,10 @@ class _MtMemoState extends State<MtMemo> {
           child: MtMemoModal(
             onSubmit: (name, date, difficulty, time, distance) {
               setState(() {
+                String formattedDate = DateFormat('yyyy-MM-dd').format(date);
                 courseDetails.add({
                   'name': name,
-                  'date': date.toString(),
+                  'date': formattedDate,
                 });
                 _isExpandedList.add(false);
               });

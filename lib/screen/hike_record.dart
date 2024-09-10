@@ -85,7 +85,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                               ),
                             ),
                             TextSpan(
-                              text: selectedSpots!=null ? '${selectedSpots![0]['spot_name']} ➡ ${selectedSpots![1]['spot_name']} ➡ ${selectedSpots![2]['spot_name']} ...' : '',
+                              text: selectedSpots!=null ? '${selectedSpots![0]['spot_name']} → ${selectedSpots![1]['spot_name']} → ${selectedSpots![2]['spot_name']} ...' : '',
                               style: TextStyle(
                                 color: Color(0xFF1E1E1E),
                                 fontSize: 16,

@@ -14,6 +14,7 @@ import 'package:sancheck/provider/hike_provider.dart';
 import 'package:sancheck/screen/hike_map.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:sancheck/screen/login_success.dart';
+import 'package:sancheck/service/flask_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
 import 'package:image_picker/image_picker.dart'; // 이미지 픽커 추가
 import 'package:sancheck/screen/weather.dart';
@@ -254,6 +255,7 @@ class _TimerButtonsState extends State<TimerButtons> {
   ValueNotifier<int> _secondsNotifier = ValueNotifier<int>(0);
   SharedPreferences? _prefs;
   File? _capturedImage; // 촬영한 사진 저장 변수
+  FlaskService _flaskService = FlaskService();
 
   // _isTracking의 getter
   bool get isTracking => _isTracking;
@@ -622,9 +624,9 @@ class _TimerButtonsState extends State<TimerButtons> {
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     // 사진이 찍으면 동시에
-    // 해야되는 것
-    // 1) 운동 기록 플라스크에 보내서 이미지로 저장
-    // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작
+    // 해야되는 것  
+    // 1) 운동 기록 플라스크에 보내서 이미지로 저장  
+    // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
     // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
 
@@ -632,6 +634,8 @@ class _TimerButtonsState extends State<TimerButtons> {
         _capturedImage = File(pickedFile.path);
       });
       await getImg();
+      await _sendImageToFlask(_capturedImage!);
+
       // 조건 체크 후 메달 모달 띄우기
       bool conditionMet = _capturedImage != null; // 실제 조건 체크 로직으로 교체
       if (conditionMet) {
@@ -643,6 +647,14 @@ class _TimerButtonsState extends State<TimerButtons> {
       _showHikeRecodeModal(); // 사진을 찍지 않았을 경우에도 등산 기록 모달로 이동
     }
   }
+
+
+
+  Future<void> _sendImageToFlask (File imageFile) async {
+    await _flaskService.sendHikingResultWithImage(imageFile);
+  }
+
+
 
   // 메달 모달을 닫으면 등산 기록 모달을 호출
   void _showMedalModal() {
@@ -669,15 +681,15 @@ class _TimerButtonsState extends State<TimerButtons> {
     ).then((_) {
       // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
       if (Navigator.canPop(context)) {
-        _resetTimer();
         Navigator.pop(context); // 등산하기 페이지로 이동
-      } else {
         _resetTimer();
+      } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
             builder: (context) => LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
           ),
         );
+        _resetTimer();
       }
     });
   }

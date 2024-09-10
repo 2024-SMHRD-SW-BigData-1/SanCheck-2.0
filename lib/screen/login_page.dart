@@ -9,6 +9,7 @@ import 'package:sancheck/screen/join_page.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/service/auth_service.dart';
 import 'package:sancheck/globals.dart';
+import 'package:sancheck/service/mountain_service.dart';
 
 Dio dio = Dio();
 final storage = FlutterSecureStorage(); // Singleton pattern for global usage
@@ -25,6 +26,7 @@ class _LoginPageState extends State<LoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   final AuthService _authService = AuthService(); // Create instance of AuthService
   bool _isObscuredPassword = true; // Password visibility toggle
+  final MountainService _mountainService = MountainService(); // MountainService 인스턴스 생성
 
   @override
   void initState() {
@@ -204,6 +206,8 @@ class _LoginPageState extends State<LoginPage> {
         String userDataString = json.encode(user.toJson());
         await storage.write(key: 'user', value: userDataString);
         userModel =  await _authService.readLoginInfo();
+        await _selectAllMountain();
+        await _selectFavMountain(userModel!.userId);
 
         Navigator.pushReplacement(
           context,
@@ -226,6 +230,25 @@ class _LoginPageState extends State<LoginPage> {
           backgroundColor: Colors.redAccent,
         ),
       );
+    }
+  }
+
+
+  Future<void> _selectAllMountain() async {
+    try {
+      List<dynamic> mountains = await _mountainService.fetchAllMountains();
+      allMountains = mountains;
+    } catch (e) {
+      print("Error fetching all mountains: $e");
+    }
+  }
+
+  Future<void> _selectFavMountain(String userId) async{
+    try {
+      List<dynamic> mountains = await _mountainService.searchFavMountain(userId);
+      favMountains = mountains;
+    } catch (e) {
+      print("Error fetching fav mountains: $e");
     }
   }
 }
