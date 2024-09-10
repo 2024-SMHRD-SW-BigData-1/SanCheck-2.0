@@ -84,7 +84,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       builder: (context) =>
           AlertDialog(
             title: Text('위치 권한 필요'),
-            content: Text('이 앱은 위치와 활동 정보 권한이 필요합니다. 권한을 허용해 주세요.'),
+            content: Text('이 앱은 위치 권한이 필요합니다. 권한을 허용해 주세요.'),
             actions: [
               TextButton(
                 onPressed: () async {
@@ -93,7 +93,6 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
                   if (status.isDenied) {
                     _showPermissionSettingsDialog();
                   } else if (status.isGranted) {
-                    _checkActivityRecognitionPermission();
                     await _selectAllMountain();
                     await _readLoginInfo();
                   }
@@ -131,17 +130,6 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
             ],
           ),
     );
-  }
-
-  Future<bool> _checkActivityRecognitionPermission() async{
-    bool granted = await Permission.activityRecognition.isGranted;
-    if(!granted){
-      granted = await Permission.activityRecognition.request() ==
-        PermissionStatus.granted;
-    }
-    _readLoginInfo();
-
-    return granted;
   }
 
   // 이미 로그인 돼있다면 로그인 성공 페이지로 이동

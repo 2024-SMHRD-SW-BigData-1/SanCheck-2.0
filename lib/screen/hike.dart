@@ -1,13 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io'; // 추가
-import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
-import 'package:pedometer/pedometer.dart';
 import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/provider/hike_provider.dart';
@@ -20,15 +16,6 @@ import 'package:image_picker/image_picker.dart'; // 이미지 픽커 추가
 import 'package:sancheck/screen/weather.dart';
 import 'package:sancheck/screen/hike_record.dart'; // HikeRecordModal 정의 파일
 import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
-
-// pedometer로 운동 데이터 로딩
-late Stream<StepCount> _stepCountStream;
-late Stream<PedestrianStatus> _pedestrianStatusStream;
-int _initialSteps = 0;
-int _currentSteps = 0;
-int _stepsOffset = 0;
-double _useCal = 0;
-double rounded_use_cal = 0;
 
 
 class Hike extends StatefulWidget {
@@ -62,18 +49,13 @@ class _HikeState extends State<Hike> {
     );
   }
 
-
-
-
-
-
   // 등산 기록 모달
   void _showHikeRecodeModal() {
     showDialog(
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
-      return HikeRecordModal(currentSteps: _currentSteps, roundedUseCal: rounded_use_cal,);
+        return HikeRecordModal();
         // return Dialog(
         //   backgroundColor: Colors.white,
         //   shape: RoundedRectangleBorder(
@@ -115,58 +97,58 @@ class _HikeState extends State<Hike> {
               backgroundColor: Colors.white, // AppBar 전체 배경을 흰색으로 설정
               elevation: 0, // 그림자 제거
               title: Consumer<HikeProvider>(
-                  builder: (context, hikeProvider, child) {
-                    return Column(
-                      // crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        if (selectedTrail != null && !hikeProvider.isTracking)
-                          Text(
-                            '선택된 등산로: ${selectedTrail!['trail_name']} ',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        if (selectedTrail == null && !hikeProvider.isTracking)
-                          Text(
-                            '선택된 등산로: 없음 ',
-                            style: TextStyle(fontSize: 16),
-                          ),
-                        if (selectedTrail == null && hikeProvider.isTracking)
-                          Row(
-                            children: [
-                              Text(
-                                '경과 시간: ',
-                                style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
-                              ),
-                              Text(
-                                _formatTime(hikeProvider.secondNotifier),
-                                style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
-                              ),
-                            ],
-                          ),
-                        if (selectedTrail != null && hikeProvider.isTracking)
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                '선택된 등산로: ${selectedTrail!['trail_name']} ',
-                                style: TextStyle(fontSize: 16),
-                              ),
-                              Row(
-                                children: [
-                                  Text(
-                                    '경과 시간: ',
-                                    style: TextStyle(fontSize: 16),
-                                  ),
-                                  Text(
-                                    _formatTime(hikeProvider.secondNotifier),
-                                    style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                      ],
-                    );
-                  }
+                builder: (context, hikeProvider, child) {
+                  return Column(
+                    // crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (selectedTrail != null && !hikeProvider.isTracking)
+                        Text(
+                          '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      if (selectedTrail == null && !hikeProvider.isTracking)
+                        Text(
+                          '선택된 등산로: 없음 ',
+                          style: TextStyle(fontSize: 16),
+                        ),
+                      if (selectedTrail == null && hikeProvider.isTracking)
+                        Row(
+                          children: [
+                            Text(
+                              '경과 시간: ',
+                              style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
+                            ),
+                            Text(
+                              _formatTime(hikeProvider.secondNotifier),
+                              style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
+                            ),
+                          ],
+                        ),
+                      if (selectedTrail != null && hikeProvider.isTracking)
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '선택된 등산로: ${selectedTrail!['trail_name']} ',
+                              style: TextStyle(fontSize: 16),
+                            ),
+                            Row(
+                              children: [
+                                Text(
+                                  '경과 시간: ',
+                                  style: TextStyle(fontSize: 16),
+                                ),
+                                Text(
+                                  _formatTime(hikeProvider.secondNotifier),
+                                  style: TextStyle(fontSize: 16, color: Colors.black), // 텍스트 색상 설정
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                    ],
+                  );
+                }
               ),
               foregroundColor: Colors.black,
               actions: [
@@ -260,155 +242,6 @@ class _TimerButtonsState extends State<TimerButtons> {
   // _isTracking의 getter
   bool get isTracking => _isTracking;
 
-  // 위도, 경도, LineString 배열 생성
-  List<double> loc_lst_lat = [];
-  List<double> loc_lst_lon = [];
-  List<double> loc_lst = [];
-
-  final _storage = FlutterSecureStorage();
-
-
-  void onStepCount(StepCount event) {
-    print("걸음 수 측정");
-    _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
-    print(_currentSteps);
-    _useCal = _currentSteps * 70.0 * 0.0005;
-    rounded_use_cal = double.parse(_useCal.toStringAsFixed(2));
-  }
-
-  void onStepCountError(error) {
-    print('Step Count Error: $error');
-  }
-
-  Future<void> initPlatformState() async {
-    _stepCountStream = Pedometer.stepCountStream;
-
-    _stepCountStream.listen((event) {
-      if (_initialSteps == 0) {
-        setState(() {
-          _initialSteps = event.steps; // 최초의 걸음 수 저장
-        });
-      }
-      onStepCount(event);
-    }).onError(onStepCountError);
-  }
-
-  void resetSteps() {
-    setState(() {
-      _stepsOffset = _currentSteps + _stepsOffset; // 오프셋 업데이트
-      _currentSteps = 0; // 걸음 수 리셋
-    });
-  }
-
-
-  Location _location = Location();
-
-
-  // 현재 위치를 리스트에 추가
-  void get_route() async{
-    // 경로 초기화
-    print("경로 저장");
-
-    // 현재 위치 받아오기
-    var get_location = await _location.getLocation();
-    double? now_lat = get_location.latitude;
-    double? now_lon = get_location.longitude;
-
-    // 받아온 위치 리스트에 저장
-    if (now_lat != null && now_lon != null){
-      loc_lst_lat.add(now_lat);
-      loc_lst_lon.add(now_lon);
-    }
-    print("lat : ${now_lat}");
-    print("lon : ${now_lon}");
-
-  }
-
-  void reset_route(){
-    loc_lst_lat.clear();
-    loc_lst_lon.clear();
-  }
-
-  String combinedString = "";
-
-  // 저장된 경로 리스트를 lineString 형태로 전환
-  void get_route_lst () {
-
-    for(int i = 0; i < loc_lst_lat.length; i++){
-      loc_lst.add(loc_lst_lat[i]);
-      loc_lst.add(loc_lst_lon[i]);
-    }
-
-    // Linestring 형태로 전환
-    combinedString = loc_lst.asMap().entries.map((entry) {
-      if(entry.key % 2 == 0){
-        return '${loc_lst[entry.key]} ${loc_lst[entry.key + 1]}';
-      } else {
-        return null;
-      }
-    }).where((element) => element != null).join(', ');
-
-  }
-
-  // 저장된 lineStiring 형태의 경로를 DB에 업로드
-  Future<void> save_route() async {
-    print("db업로드 시작");
-    get_route_lst();
-    Dio dio = Dio();
-
-    if (loc_lst.isEmpty) {
-      print("Error : Location list is empty");
-      return;
-    }
-    String linestring = "LineString($combinedString)";
-
-    String url = "http://192.168.219.122:8000/mountain/upload";
-    print("currentSteps : $_currentSteps");
-    String? user = await _storage.read(key: "user");
-    Map<String, dynamic> userMap = jsonDecode(user!);
-    String? user_id = userMap['user_id'];
-    print("user_id : ${user_id}");
-    print("lineStirng : $linestring");
-
-    print("trail_idx : $selectedTrail");
-
-    try {
-      Response res = await dio.post(url, data: {
-        "user_id": user_id,
-        "trail_idx": selectedTrail!["trail_idx"],
-        "hiking_date": DateTime.now().toIso8601String(),
-        "hiking_steps": _currentSteps,
-        "hiking_state": 1,
-        "hiking_time": 800,
-        "hiking_route": linestring
-      });
-
-      print(res.statusCode);
-      print(res.realUri);
-
-    } catch (e) {
-      print('Error sending request: $e');
-    }
-  }
-
-  // 저장된 경로를 통해 지도에 이미지로 그려 저장
-  Future<void> getImg() async{
-    Dio dio = Dio();
-
-    String url = "http://192.168.219.122:5050/drawMap";
-    try{
-      Response res = await dio.get(url, queryParameters: {
-        "trail_idx" : selectedTrail?["trail_idx"]
-      });
-
-      print(res.statusCode);
-      print(res.realUri);
-    }catch (e){
-      print("Error sending request: $e");
-    }
-  }
-
-
   // _secondsNotifier의 getter
   ValueNotifier<int> get secondsNotifier => _secondsNotifier;
 
@@ -438,19 +271,13 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 타이머 시작
   void _startTimer() {
-    int cnt = 0;
     // Provider에서 HikeProvider 인스턴스를 가져옵니다.
     final hikeProvider = context.read<HikeProvider>();
 
     _timer = Timer.periodic(Duration(seconds: 1), (Timer timer) {
-      cnt++;
-      print(cnt);
       _secondsNotifier.value++;
       hikeProvider.updateSecondNotifier(_secondsNotifier.value);
       _saveTimerValue(_secondsNotifier.value); // 타이머 값 저장
-      if(cnt % 2 == 0){
-        get_route();
-      }
     });
   }
 
@@ -523,7 +350,6 @@ class _TimerButtonsState extends State<TimerButtons> {
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
                     onPressed: () {
-                      _resetTimer();
                       Navigator.of(context).pop();
                       _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
                     },
@@ -620,7 +446,6 @@ class _TimerButtonsState extends State<TimerButtons> {
   // 이미지 촬영 함수 수정
   Future<void> _captureImage() async {
     final picker = ImagePicker();
-
     final pickedFile = await picker.pickImage(source: ImageSource.camera);
 
     // 사진이 찍으면 동시에
@@ -629,11 +454,9 @@ class _TimerButtonsState extends State<TimerButtons> {
     // 2) 사용자가 찍은 사진 플라스크에 보내서 yolo로 분석 후 일치하면 dallE제작 
     // 3) 불일치하면 다시 사진 찍을건지 물어보기
     if (pickedFile != null) {
-
       setState(() {
         _capturedImage = File(pickedFile.path);
       });
-      await getImg();
       await _sendImageToFlask(_capturedImage!);
 
       // 조건 체크 후 메달 모달 띄우기
@@ -676,7 +499,7 @@ class _TimerButtonsState extends State<TimerButtons> {
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
-        return HikeRecordModal(roundedUseCal: rounded_use_cal, currentSteps: _currentSteps,);
+        return HikeRecordModal();
       },
     ).then((_) {
       // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
@@ -695,8 +518,7 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
   // 타이머 초기화
-  void _resetTimer() async{
-    await save_route();
+  void _resetTimer() {
     _pauseTimer();
 
     // Provider에서 HikeProvider 인스턴스를 가져옵니다.
@@ -719,7 +541,6 @@ class _TimerButtonsState extends State<TimerButtons> {
     super.initState();
     _loadTimerValue();
     _initPrefs();
-    initPlatformState();
   }
 
 
@@ -729,7 +550,6 @@ class _TimerButtonsState extends State<TimerButtons> {
     _secondsNotifier.dispose();
     super.dispose();
   }
-
 
   @override
   Widget build(BuildContext context) {
