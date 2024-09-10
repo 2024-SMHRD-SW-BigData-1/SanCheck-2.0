@@ -237,6 +237,7 @@ class _TimerButtonsState extends State<TimerButtons> {
   ValueNotifier<int> _secondsNotifier = ValueNotifier<int>(0);
   SharedPreferences? _prefs;
   File? _capturedImage; // 촬영한 사진 저장 변수
+  FlaskService _flaskService = FlaskService();
 
   // _isTracking의 getter
   bool get isTracking => _isTracking;
@@ -473,8 +474,7 @@ class _TimerButtonsState extends State<TimerButtons> {
 
 
   Future<void> _sendImageToFlask (File imageFile) async {
-    FlaskService flaskService = FlaskService();
-    flaskService.sendImageToFlask(imageFile);
+    await _flaskService.sendHikingResultWithImage(imageFile);
   }
 
 
