@@ -6,6 +6,7 @@ import 'package:sancheck/model/user_model.dart';
 import 'package:sancheck/screen/find_id.dart';
 import 'package:sancheck/screen/find_pw.dart';
 import 'package:sancheck/screen/join_page.dart';
+import 'package:sancheck/screen/loading_page.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/service/auth_service.dart';
 import 'package:sancheck/globals.dart';
@@ -31,20 +32,6 @@ class _LoginPageState extends State<LoginPage> {
   @override
   void initState() {
     super.initState();
-    readLoginInfo();
-  }
-
-  Future<void> readLoginInfo() async {
-    String? value = await storage.read(key: 'user');
-
-    if (value != null) {
-      // If already logged in, navigate to the login success page
-      UserModel user = userModelFromJson(value);
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
-      );
-    }
   }
 
   @override
@@ -206,12 +193,12 @@ class _LoginPageState extends State<LoginPage> {
         String userDataString = json.encode(user.toJson());
         await storage.write(key: 'user', value: userDataString);
         userModel =  await _authService.readLoginInfo();
-        await _selectAllMountain();
-        await _selectFavMountain(userModel!.userId);
 
+        // await _selectAllMountain();
+        // await _selectFavMountain(userModel!.userId);
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
+          MaterialPageRoute(builder: (_) => LoadingPage()),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(

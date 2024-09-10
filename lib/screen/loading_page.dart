@@ -51,7 +51,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       _showPermissionDialog();
     } else if (status.isGranted) {
       // 권한이 허용된 경우
-      await _selectAllMountain();
+      // await _selectAllMountain();
       await _readLoginInfo();
     } else if (status.isPermanentlyDenied) {
       // 권한이 영구적으로 거절된 경우
@@ -94,7 +94,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
                   if (status.isDenied) {
                     _showPermissionSettingsDialog();
                   } else if (status.isGranted) {
-                    await _selectAllMountain();
+                    // await _selectAllMountain();
                     await _readLoginInfo();
                   }
                 },
@@ -153,8 +153,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
 
       await _selectAllMountain();
       await _selectFavMountain(userModel!.userId); // 페이지 이동 전 관심있는 산 가져오기
-      print('favMountain : $favMountains');
-      
+      // print('favMountain : $favMountains');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
