@@ -3,12 +3,12 @@ import 'package:provider/provider.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/provider/hike_provider.dart';
 
-class HikeRecordModal extends StatelessWidget {
+class HikeRecordModal extends StatefulWidget {
 
   final int currentSteps;
   final double roundedUseCal;
 
-  HikeRecordModal({
+  const HikeRecordModal({
     Key? key,
     required this.currentSteps,
     required this.roundedUseCal
@@ -16,7 +16,11 @@ class HikeRecordModal extends StatelessWidget {
 
   @override
   State<HikeRecordModal> createState() => _HikeRecordModalState();
+}
 
+class _HikeRecordModalState extends State<HikeRecordModal> {
+  @override
+  State<HikeRecordModal> createState() => _HikeRecordModalState();
 
   String _formatTime(int seconds) {
     final int minutes = seconds ~/ 60;
