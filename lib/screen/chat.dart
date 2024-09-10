@@ -18,7 +18,6 @@ class _ChatPageState extends State<ChatPage> {
     _controller.dispose();
   }
 
-  // 메시지 전송 메서드
   void _sendMessage() async {
     if (_controller.text.isNotEmpty) {
       setState(() {
@@ -61,7 +60,6 @@ class _ChatPageState extends State<ChatPage> {
     }
   }
 
-  // 자동 응답 메시지 추가 메서드
   void _sendAutoReply(String resText) {
     setState(() {
       _messages.add({
@@ -76,41 +74,44 @@ class _ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Chat Page'),
-        backgroundColor: Colors.grey[200],
-        foregroundColor: Colors.black,
-      ),
-      backgroundColor: Colors.white,
-      body: Column(
-        children: [
-          Expanded(
-            child: SingleChildScrollView(
-              padding: EdgeInsets.all(16),
-              reverse: true,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildInitialMessage(),
-                  SizedBox(height: 16),
-                  ..._messages.map((message) => _buildMessage(
-                    message['text'],
-                    message['isAutoReply'],
-                    message['color'],
-                    message['textColor'],
-                  )),
-                  if (_isLoading)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 8),
-                      child: CircularProgressIndicator(),
-                    ),
-                ],
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(12),
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text('Chat Page'),
+          backgroundColor: Colors.grey[200],
+          foregroundColor: Colors.black,
+        ),
+        backgroundColor: Colors.white,
+        body: Column(
+          children: [
+            Expanded(
+              child: SingleChildScrollView(
+                padding: EdgeInsets.all(16),
+                reverse: true,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildInitialMessage(),
+                    SizedBox(height: 16),
+                    ..._messages.map((message) => _buildMessage(
+                      message['text'],
+                      message['isAutoReply'],
+                      message['color'],
+                      message['textColor'],
+                    )),
+                    if (_isLoading)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 8),
+                        child: CircularProgressIndicator(),
+                      ),
+                  ],
+                ),
               ),
             ),
-          ),
-          _buildInputArea(),
-        ],
+            _buildInputArea(),
+          ],
+        ),
       ),
     );
   }
