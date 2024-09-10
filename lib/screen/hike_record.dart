@@ -5,13 +5,9 @@ import 'package:sancheck/provider/hike_provider.dart';
 
 class HikeRecordModal extends StatefulWidget {
 
-  final int currentSteps;
-  final double roundedUseCal;
 
   const HikeRecordModal({
     Key? key,
-    required this.currentSteps,
-    required this.roundedUseCal
   }) : super(key: key);
 
   @override
@@ -113,9 +109,9 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                           SizedBox(height: 16),
                           _buildInfoRow(Icons.directions_walk, '운동 거리', '5.9 km'),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.directions_run, '걸음수', widget.currentSteps.toString()),
+                          _buildInfoRow(Icons.directions_run, '걸음수', context.watch<HikeProvider>().currentSteps.toString()),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', widget.roundedUseCal.toString()),
+                          _buildInfoRow(Icons.local_fire_department, '소모 칼로리', context.watch<HikeProvider>().roundedUseCal.toString()),
                         ],
                       ),
                     ],

@@ -1,11 +1,9 @@
 import 'dart:async';
-import 'dart:convert';
 import 'dart:io'; // 추가
 import 'package:dio/dio.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_naver_map/flutter_naver_map.dart';
-import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:location/location.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:provider/provider.dart';
@@ -25,10 +23,8 @@ import 'package:sancheck/screen/medal.dart'; // MedalModal 정의 파일
 late Stream<StepCount> _stepCountStream;
 late Stream<PedestrianStatus> _pedestrianStatusStream;
 int _initialSteps = 0;
-int _currentSteps = 0;
 int _stepsOffset = 0;
 double _useCal = 0;
-double rounded_use_cal = 0;
 
 
 class Hike extends StatefulWidget {
@@ -73,14 +69,7 @@ class _HikeState extends State<Hike> {
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
-        return HikeRecordModal(currentSteps: _currentSteps, roundedUseCal: rounded_use_cal,);
-        // return Dialog(
-        //   backgroundColor: Colors.white,
-        //   shape: RoundedRectangleBorder(
-        //     borderRadius: BorderRadius.circular(20.0),
-        //   ),
-        //   child: HikeRecordModal(),
-        // );
+        return HikeRecordModal();
       },
     );
   }
@@ -257,23 +246,21 @@ class _TimerButtonsState extends State<TimerButtons> {
   File? _capturedImage; // 촬영한 사진 저장 변수
   FlaskService _flaskService = FlaskService();
 
-  // _isTracking의 getter
-  bool get isTracking => _isTracking;
-
   // 위도, 경도, LineString 배열 생성
   List<double> loc_lst_lat = [];
   List<double> loc_lst_lon = [];
   List<double> loc_lst = [];
 
-  final _storage = FlutterSecureStorage();
-
 
   void onStepCount(StepCount event) {
+    final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
+    hikeProvider.updateCurrentSteps(event.steps - _initialSteps - _stepsOffset);
+
     print("걸음 수 측정");
-    _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
-    print(_currentSteps);
-    _useCal = _currentSteps * 70.0 * 0.0005;
-    rounded_use_cal = double.parse(_useCal.toStringAsFixed(2));
+    // _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
+    print(hikeProvider.currentSteps);
+    _useCal = hikeProvider.currentSteps * 70.0 * 0.0005;
+    hikeProvider.updateRoundedUseCal(double.parse(_useCal.toStringAsFixed(2)));
   }
 
   void onStepCountError(error) {
@@ -294,9 +281,10 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
   void resetSteps() {
+    final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
     setState(() {
-      _stepsOffset = _currentSteps + _stepsOffset; // 오프셋 업데이트
-      _currentSteps = 0; // 걸음 수 리셋
+      _stepsOffset = hikeProvider.currentSteps + _stepsOffset; // 오프셋 업데이트
+      hikeProvider.resetCurrentSteps(); // 걸음 수 리셋
     });
   }
 
@@ -352,6 +340,8 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 저장된 lineStiring 형태의 경로를 DB에 업로드
   Future<void> save_route() async {
+    final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
+
     print("db업로드 시작");
     get_route_lst();
     Dio dio = Dio();
@@ -363,10 +353,8 @@ class _TimerButtonsState extends State<TimerButtons> {
     String linestring = "LineString($combinedString)";
 
     String url = "http://192.168.219.122:8000/mountain/upload";
-    print("currentSteps : $_currentSteps");
-    String? user = await _storage.read(key: "user");
-    Map<String, dynamic> userMap = jsonDecode(user!);
-    String? user_id = userMap['user_id'];
+    //print("currentSteps : $_currentSteps");
+    String user_id = userModel!.userId;
     print("user_id : ${user_id}");
     print("lineStirng : $linestring");
 
@@ -375,9 +363,9 @@ class _TimerButtonsState extends State<TimerButtons> {
     try {
       Response res = await dio.post(url, data: {
         "user_id": user_id,
-        "trail_idx": selectedTrail!["trail_idx"],
+        "trail_idx": selectedTrail?["trail_idx"],
         "hiking_date": DateTime.now().toIso8601String(),
-        "hiking_steps": _currentSteps,
+        "hiking_steps": hikeProvider.currentSteps,
         "hiking_state": 1,
         "hiking_time": 800,
         "hiking_route": linestring
@@ -555,10 +543,11 @@ class _TimerButtonsState extends State<TimerButtons> {
           ),
           title: Center(
             child: Text(
-              '사진 촬영?',
+              '사진을 촬영하시겠습니까?',
               style: TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 20,
+
               ),
             ),
           ),
@@ -677,7 +666,7 @@ class _TimerButtonsState extends State<TimerButtons> {
       context: context,
       barrierColor: Colors.black.withOpacity(0.5),
       builder: (BuildContext context) {
-        return HikeRecordModal(roundedUseCal: rounded_use_cal, currentSteps: _currentSteps,);
+        return HikeRecordModal();
       },
     ).then((_) {
       // 등산 기록 모달이 닫힌 후 등산하기 페이지로 돌아옴
