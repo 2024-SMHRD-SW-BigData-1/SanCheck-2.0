@@ -157,33 +157,33 @@ class _HomeMtDetailState extends State<HomeMtDetail> {
               trailingIcon: _containsMountIdx
                   ? Icons.star
                   : Icons.star_border,
-              
+
               // 별 버튼 클릭
               onTrailingIconPressed: () async {
 
-                  if (_containsMountIdx) { //favMt에서 제거
-                    setState(() {
-                      favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
-                    });
-                    await _removeFavMountain(_mountIdx!, userModel!.userId);
-                    mountainProvider.updateFavMountain();
-
-                  } else { // favMt에 추가
-                    setState(() {
-                      favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
-                    });
-                    await _addFavMountain(_mountIdx!, userModel!.userId);
-                    mountainProvider.updateFavMountain();
-                  }
-                  // _containsMountIdx를 상태에 맞게 업데이트
+                if (_containsMountIdx) { //favMt에서 제거
                   setState(() {
-                    _containsMountIdx = !_containsMountIdx;
+                    favMountains!.removeWhere((item) => item['mount_idx'] == _mountIdx);
                   });
+                  await _removeFavMountain(_mountIdx!, userModel!.userId);
+                  mountainProvider.updateFavMountain();
+
+                } else { // favMt에 추가
+                  setState(() {
+                    favMountains!.add({'mount_idx': _mountIdx, 'user_id': userModel!.userId});
+                  });
+                  await _addFavMountain(_mountIdx!, userModel!.userId);
+                  mountainProvider.updateFavMountain();
+                }
+                // _containsMountIdx를 상태에 맞게 업데이트
+                setState(() {
+                  _containsMountIdx = !_containsMountIdx;
+                });
 
 
 
               },
-              ),
+            ),
             SizedBox(height: 20),
             Expanded(
               child: ListView.separated(

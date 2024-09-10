@@ -51,7 +51,7 @@ class MountainService {
     try {
       String url = "http://192.168.219.200:8000/mountain/searchFavMountain";
       Response res = await dio.get(url, queryParameters: {
-          'userId' : userId
+        'userId' : userId
       });
 
       print('Request URL: ${res.realUri}');
@@ -104,7 +104,7 @@ class MountainService {
       print('Status Code: ${res.statusCode}');
       print('Response Data: ${res.data}');
 
-        print(res.data['message']);
+      print(res.data['message']);
     } catch (e) {
       print('Error occurred: $e');
       throw Exception('서버 요청 실패');
