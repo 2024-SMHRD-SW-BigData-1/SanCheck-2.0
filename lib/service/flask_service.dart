@@ -25,7 +25,7 @@ class FlaskService {
 
       // Flask 서버의 엔드포인트로 요청 보내기
       final response = await dio.post(
-        'http://192.168.219.200:5050/uploadImageToYolo', // Flask 서버의 업로드 URL로 변경
+        'http://192.168.219.200:5050/sendImageToFlask', // Flask 서버의 업로드 URL로 변경
         data: formData,
       );
 

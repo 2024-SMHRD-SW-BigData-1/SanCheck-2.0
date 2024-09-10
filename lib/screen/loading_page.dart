@@ -139,6 +139,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
     if (user != null) {
       userModel = user;
 
+      await _selectAllMountain();
       await _selectFavMountain(userModel!.userId); // 페이지 이동 전 관심있는 산 가져오기
       print('favMountain : $favMountains');
       
@@ -147,6 +148,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
       );
     } else {
+      await _selectAllMountain();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => LoginPage()));
     }
