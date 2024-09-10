@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // login_page.dart 파일을 import
 
 class MyMedal extends StatelessWidget {
   final List<Map<String, String>> medals = [
@@ -18,12 +17,11 @@ class MyMedal extends StatelessWidget {
       'name': '무등산',
       'date': '2024-09-18'
     },
-    // 더 많은 메달을 여기에 추가할 수 있습니다.
   ];
 
   @override
   Widget build(BuildContext context) {
-    final screenWidth = MediaQuery.of(context).size.width; // 화면의 너비 가져오기
+    final screenWidth = MediaQuery.of(context).size.width;
 
     return Scaffold(
       appBar: AppBar(
@@ -36,14 +34,13 @@ class MyMedal extends StatelessWidget {
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.start, // 세로 방향 정렬 설정
+          mainAxisAlignment: MainAxisAlignment.start,
           children: [
             SizedBox(height: 10),
-            // 네모 상자 추가
             Expanded(
               child: Center(
                 child: Container(
-                  width: screenWidth * 0.9, // 화면 너비의 90%로 설정
+                  width: screenWidth * 0.9,
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(12),
@@ -59,9 +56,10 @@ class MyMedal extends StatelessWidget {
                   padding: EdgeInsets.all(12),
                   child: GridView.builder(
                     gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-                      crossAxisCount: 2, // 한 줄에 2개의 항목을 표시
+                      crossAxisCount: 2,
                       crossAxisSpacing: 10,
                       mainAxisSpacing: 10,
+                      childAspectRatio: 0.8, // 항목의 비율 조정
                     ),
                     itemCount: medals.length,
                     itemBuilder: (context, index) {
@@ -69,6 +67,7 @@ class MyMedal extends StatelessWidget {
                       return GestureDetector(
                         onTap: () => _showImagePopup(context, medal['imageUrl']!),
                         child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
@@ -80,16 +79,20 @@ class MyMedal extends StatelessWidget {
                               ),
                             ),
                             SizedBox(height: 8),
-                            Text(
-                              medal['name']!,
-                              style: TextStyle(
-                                  fontSize: 16, fontWeight: FontWeight.bold),
+                            Flexible(
+                              child: Text(
+                                medal['name']!,
+                                style: TextStyle(
+                                    fontSize: 14, // 텍스트 크기 조정
+                                    fontWeight: FontWeight.bold),
+                                overflow: TextOverflow.ellipsis, // 텍스트 오버플로우 방지
+                                textAlign: TextAlign.center,
+                              ),
                             ),
                             SizedBox(height: 4),
                             Text(
                               medal['date']!,
-                              style: TextStyle(
-                                  fontSize: 14, color: Colors.grey),
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                           ],
                         ),
@@ -105,7 +108,6 @@ class MyMedal extends StatelessWidget {
     );
   }
 
-  // 이미지 확대 팝업 위젯
   void _showImagePopup(BuildContext context, String imageUrl) {
     showDialog(
       context: context,
