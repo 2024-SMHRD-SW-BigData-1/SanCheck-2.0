@@ -392,21 +392,21 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
   // 저장된 경로를 통해 지도에 이미지로 그려 저장
-  Future<void> getImg() async{
-    Dio dio = Dio();
-
-    String url = "http://192.168.219.122:5050/drawMap";
-    try{
-      Response res = await dio.get(url, queryParameters: {
-        "trail_idx" : selectedTrail?["trail_idx"]
-      });
-
-      print(res.statusCode);
-      print(res.realUri);
-    }catch (e){
-      print("Error sending request: $e");
-    }
-  }
+  // Future<void> getImg() async{
+  //   Dio dio = Dio();
+  //
+  //   String url = "http://192.168.219.122:5050/drawMap";
+  //   try{
+  //     Response res = await dio.get(url, queryParameters: {
+  //       "trail_idx" : selectedTrail?["trail_idx"]
+  //     });
+  //
+  //     print(res.statusCode);
+  //     print(res.realUri);
+  //   }catch (e){
+  //     print("Error sending request: $e");
+  //   }
+  // }
 
 
   // _secondsNotifier의 getter
@@ -522,8 +522,9 @@ class _TimerButtonsState extends State<TimerButtons> {
                       ),
                       padding: EdgeInsets.symmetric(vertical: 12),
                     ),
-                    onPressed: () {
+                    onPressed: () async{
                       _resetTimer();
+                      await save_route();
                       Navigator.of(context).pop();
                       _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
                     },
@@ -633,7 +634,7 @@ class _TimerButtonsState extends State<TimerButtons> {
       setState(() {
         _capturedImage = File(pickedFile.path);
       });
-      await getImg();
+      // await getImg();
       await _sendImageToFlask(_capturedImage!);
 
       // 조건 체크 후 메달 모달 띄우기
@@ -696,7 +697,6 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   // 타이머 초기화
   void _resetTimer() async{
-    await save_route();
     _pauseTimer();
 
     // Provider에서 HikeProvider 인스턴스를 가져옵니다.
