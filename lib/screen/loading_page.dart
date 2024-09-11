@@ -51,7 +51,7 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       _showPermissionDialog();
     } else if (status.isGranted) {
       // 권한이 허용된 경우
-      await _selectAllMountain();
+      // await _selectAllMountain();
       await _readLoginInfo();
     } else if (status.isPermanentlyDenied) {
       // 권한이 영구적으로 거절된 경우
@@ -84,16 +84,18 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       builder: (context) =>
           AlertDialog(
             title: Text('위치 권한 필요'),
-            content: Text('이 앱은 위치 권한이 필요합니다. 권한을 허용해 주세요.'),
+            content: Text('이 앱은 위치와 활동 정보 권한이 필요합니다. 권한을 허용해 주세요.'),
             actions: [
               TextButton(
                 onPressed: () async {
                   Navigator.of(context).pop();
                   var status = await Permission.location.request();
+                  _checkActivityRecognitionPermission();
                   if (status.isDenied) {
                     _showPermissionSettingsDialog();
                   } else if (status.isGranted) {
-                    _readLoginInfo();
+                    // await _selectAllMountain();
+                    await _readLoginInfo();
                   }
                 },
                 child: Text('권한 요청'),
@@ -107,13 +109,24 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
     );
   }
 
+  Future<bool> _checkActivityRecognitionPermission() async{
+    bool granted = await Permission.activityRecognition.isGranted;
+    if(!granted){
+      granted = await Permission.activityRecognition.request() ==
+          PermissionStatus.granted;
+    }
+    _readLoginInfo();
+
+    return granted;
+  }
+
   void _showPermissionSettingsDialog() {
     showDialog(
       context: context,
       builder: (context) =>
           AlertDialog(
             title: Text('위치 권한 설정'),
-            content: Text('위치 권한이 필요합니다. 설정에서 권한을 허용해 주세요.'),
+            content: Text('이 앱은 위치와 활동 정보 권한이 필요합니다. 권한을 허용해 주세요.'),
             actions: [
               TextButton(
                 onPressed: () {
@@ -138,14 +151,15 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
     if (user != null) {
       userModel = user;
 
+      await _selectAllMountain();
       await _selectFavMountain(userModel!.userId); // 페이지 이동 전 관심있는 산 가져오기
-      print('favMountain : $favMountains');
-      
+      // print('favMountain : $favMountains');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
       );
     } else {
+      await _selectAllMountain();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => LoginPage()));
     }
