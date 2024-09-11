@@ -1,4 +1,5 @@
 import 'package:dio/dio.dart';
+import 'package:sancheck/globals.dart';
 
 class MountainService {
   final Dio dio = Dio();
@@ -47,11 +48,11 @@ class MountainService {
   }
 
   // 관심있는 산 검색
-  Future<List<dynamic>> searchFavMountain(String userId) async {
+  Future<List<dynamic>> searchFavMountain() async {
     try {
       String url = "http://192.168.219.200:8000/mountain/searchFavMountain";
       Response res = await dio.get(url, queryParameters: {
-          'userId' : userId
+          'userId' : userModel!.userId
       });
 
       print('Request URL: ${res.realUri}');

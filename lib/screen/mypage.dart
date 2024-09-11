@@ -5,6 +5,8 @@ import 'package:intl/intl.dart';
 import 'package:sancheck/globals.dart';
 import 'package:sancheck/screen/loading_page.dart';
 import 'package:sancheck/service/auth_service.dart';
+import 'package:sancheck/service/hiking_service.dart';
+import 'package:sancheck/service/medal_service.dart';
 import 'my_info.dart'; // my_info.dart import
 import 'mt_memo.dart'; // MtMemo 페이지 import
 import 'my_medal.dart'; // MyMedal 페이지 import
@@ -20,6 +22,9 @@ class MyPage extends StatefulWidget {
 class _MyPageState extends State<MyPage> {
   final AuthService _authService = AuthService(); // AuthService 인스턴스 생성
   late String _formattedDate;
+  final MedalService _medalService = MedalService();
+  final HikingService _hikingService = HikingService();
+
 
   @override
   void initState() {
@@ -36,6 +41,26 @@ class _MyPageState extends State<MyPage> {
       setState(() {
         _formattedDate = DateFormat('yyyy-MM-dd').format(userModel!.userBirthdate);
       });
+    }
+    await _selectAllMedals();
+    await _selectAllHikingResults();
+  }
+
+  Future<void> _selectAllMedals() async {
+    try {
+      List<dynamic> medals = await _medalService.fetchAllMedals();
+      allMedals = medals;
+    } catch (e) {
+      print("Error fetching all mountains: $e");
+    }
+  }
+
+  Future<void> _selectAllHikingResults() async {
+    try {
+      List<dynamic> hikings = await _hikingService.fetchAllHikingResults();
+      allHikingResults = hikings;
+    } catch (e) {
+      print("Error fetching all mountains: $e");
     }
   }
 
@@ -118,7 +143,7 @@ class _MyPageState extends State<MyPage> {
               Navigator.push(
                   context,
                   MaterialPageRoute(
-                      builder: (_) => MtMemo(mountainName: '북한산'))); // MtMemo로 이동
+                      builder: (_) => MtMemo())); // MtMemo로 이동
               break;
             case '수집 메달':
               Navigator.push(

@@ -1,11 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:sancheck/globals.dart';
+import 'package:sancheck/service/trail_service.dart';
 import 'mt_memo_modal.dart';
 
 class MtMemo extends StatefulWidget {
-  final String mountainName;
-
-  MtMemo({required this.mountainName});
 
   @override
   _MtMemoState createState() => _MtMemoState();
@@ -13,6 +12,10 @@ class MtMemo extends StatefulWidget {
 
 class _MtMemoState extends State<MtMemo> {
   List<bool> _isExpandedList = [];
+  TrailService _trailService = TrailService();
+  List<dynamic> _selectedTrails = [];
+  bool _isLoading = true;
+
   List<Map<String, String?>> courseDetails = [
     {'name': '무등산', 'date': '2023-08-29'},
     {'name': '설악산', 'date': '2023-09-05'},
@@ -35,15 +38,60 @@ class _MtMemoState extends State<MtMemo> {
     }
   ];
 
+  Future<void> selectTrailByTrailIdx() async {
+    try {
+      List<dynamic> tempTrails = [];
+      for (var hikingResult in allHikingResults ?? []) {
+        // trail_idx가 존재하고 null이 아닐 경우에만 처리
+        if (hikingResult.containsKey('trail_idx') && hikingResult['trail_idx'] != null) {
+          int trailIdx = hikingResult['trail_idx'];
+
+          // trail_idx로 관련된 trail 정보 가져오기
+          Map<String, dynamic> tempTrail = await _trailService.selectTrailByTrailIdx(trailIdx);
+          tempTrails.add(tempTrail);
+        }
+      }
+
+      // 결과가 비었을 경우 처리
+      if (tempTrails.isEmpty) {
+        _isLoading = false;
+        return;
+      } else {
+        setState(() {
+          _selectedTrails = tempTrails;
+        });
+        _isLoading = false;
+      }
+    } catch (e) {
+      print("Error fetching spots: $e");
+      setState(() {
+        _isLoading = false;
+      });
+    }
+  }
+
   @override
   void initState() {
     super.initState();
-    _isExpandedList = List.generate(courseDetails.length, (_) => false);
+    _isExpandedList = List.generate(allHikingResults?.length ?? 0, (_) => false);
+    selectTrailByTrailIdx ();
   }
 
   @override
   Widget build(BuildContext context) {
     final screenWidth = MediaQuery.of(context).size.width;
+
+    if(_isLoading) {
+      return Scaffold(
+        appBar: AppBar(
+          title: Text('나의 등산 기록',
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+          centerTitle: true,
+          backgroundColor: Color(0xFFF5F5F5),
+        ),
+        body: Center(child: CircularProgressIndicator()),
+      );
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -56,11 +104,11 @@ class _MtMemoState extends State<MtMemo> {
       body: Padding(
         padding: EdgeInsets.all(screenWidth * 0.04),
         child: ListView.separated(
-          itemCount: courseDetails.length,
+          itemCount: allHikingResults?.length ?? 0,
           separatorBuilder: (context, index) => SizedBox(height: 16),
           itemBuilder: (context, index) {
-            String name = courseDetails[index]['name'] ?? '알 수 없는 산';
-            String date = courseDetails[index]['date'] ?? '날짜 없음';
+            String name = allHikingResults![index]['mount_name'] ?? '알 수 없는 산';
+            String date = allHikingResults![index]['hiking_date'] ?? '날짜 없음';
             return GestureDetector(
               onLongPress: () => _showDeleteConfirmation(context, index),
               child: Column(
@@ -82,7 +130,7 @@ class _MtMemoState extends State<MtMemo> {
                     curve: Curves.easeInOut,
                     child: _isExpandedList[index]
                         ? _buildSubCourseItem(
-                        subCourses[index % subCourses.length], screenWidth)
+                        allHikingResults![index], screenWidth)
                         : SizedBox(),
                   ),
                 ],
@@ -196,7 +244,18 @@ class _MtMemoState extends State<MtMemo> {
   }
 
   // 세부 코스 항목 생성 위젯
-  Widget _buildSubCourseItem(Map<String, dynamic> subCourse, double screenWidth) {
+  Widget _buildSubCourseItem(Map<dynamic, dynamic> subCourse, double screenWidth) {
+
+    print('ddddd$subCourse');
+    print(subCourse['trail_idx']);
+
+    Map<dynamic, dynamic> selectedTrail = _selectedTrails.firstWhere(
+          (trail) => trail['trail_idx'] == subCourse['trail_idx'],
+      orElse: () => {}, // 또는 적절한 기본값
+    );
+
+    print(selectedTrail['trail_name']);
+
     return Container(
       width: screenWidth * 0.92,
       margin: EdgeInsets.symmetric(vertical: 8),
@@ -215,16 +274,16 @@ class _MtMemoState extends State<MtMemo> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          if (subCourse['imageUrl'] != null &&
-              subCourse['imageUrl'].isNotEmpty &&
-              Uri.tryParse(subCourse['imageUrl']) != null)
+          if (subCourse['hiking_img'] != null &&
+              subCourse['hiking_img'].isNotEmpty &&
+              Uri.tryParse(subCourse['hiking_img']) != null)
             Container(
               margin: EdgeInsets.only(bottom: 8),
               height: 150,
               decoration: BoxDecoration(
                 borderRadius: BorderRadius.circular(12),
                 image: DecorationImage(
-                  image: NetworkImage(subCourse['imageUrl']),
+                  image: NetworkImage('http://192.168.219.200:8000/hiking/hiking_images/${subCourse['hiking_img']}'),
                   fit: BoxFit.cover,
                   onError: (exception, stackTrace) {
                     print('Error loading image: $exception');
@@ -244,7 +303,7 @@ class _MtMemoState extends State<MtMemo> {
                   style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 TextSpan(
-                  text: subCourse['difficulty'],
+                  text: selectedTrail['trail_name'] ?? '없음',
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.black,
@@ -259,11 +318,11 @@ class _MtMemoState extends State<MtMemo> {
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: '⏱ 시간: ',
+                  text: '⏱ 운동 시간: ',
                   style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 TextSpan(
-                  text: subCourse['time'],
+                  text: subCourse['hiking_time'],
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.black,
@@ -278,11 +337,11 @@ class _MtMemoState extends State<MtMemo> {
             text: TextSpan(
               children: [
                 TextSpan(
-                  text: '🏃‍♂️ 거리: ',
+                  text: '🏃‍♂️ 운동 거리: ',
                   style: TextStyle(fontSize: 16, color: Colors.black),
                 ),
                 TextSpan(
-                  text: subCourse['distance'],
+                  text: subCourse['hiking_dist'].toString(),
                   style: TextStyle(
                     fontSize: 16,
                     color: Colors.black,
@@ -356,7 +415,7 @@ class _MtMemoState extends State<MtMemo> {
                     ElevatedButton(
                       onPressed: () {
                         setState(() {
-                          courseDetails.removeAt(index);
+                          allHikingResults!.removeAt(index);
                           _isExpandedList.removeAt(index);
                         });
                         Navigator.of(context).pop();
@@ -450,7 +509,7 @@ class _MtMemoState extends State<MtMemo> {
             onSubmit: (name, date, difficulty, time, distance) {
               setState(() {
                 String formattedDate = DateFormat('yyyy-MM-dd').format(date);
-                courseDetails.add({
+                allHikingResults?.add({
                   'name': name,
                   'date': formattedDate,
                 });

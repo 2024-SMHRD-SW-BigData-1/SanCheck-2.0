@@ -122,7 +122,7 @@ class _HomeState extends State<Home> {
                 SizedBox(height: screenHeight * 0.005),
                 ExpandableButtonList(
                   title: "난이도별 코스",
-                  items: ["중간", "중간", "중간"],
+                  items: ["쉬움", "보통", "어려움"],
                   buttonColor: Colors.orange,
                   iconUrl: 'https://img.icons8.com/color/96/sparkling.png',
                   isNavigable: true,

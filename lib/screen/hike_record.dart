@@ -107,7 +107,7 @@ class _HikeRecordModalState extends State<HikeRecordModal> {
                         children: [
                           _buildInfoRow(Icons.access_time, '전체 시간', _formatTime(context.watch<HikeProvider>().secondNotifier)),
                           SizedBox(height: 16),
-                          _buildInfoRow(Icons.directions_walk, '운동 거리', '5.9 km'),
+                          _buildInfoRow(Icons.directions_walk, '운동 거리', '${context.watch<HikeProvider>().roundedDistance.toString()} km'),
                           SizedBox(height: 16),
                           _buildInfoRow(Icons.directions_run, '걸음수', context.watch<HikeProvider>().currentSteps.toString()),
                           SizedBox(height: 16),

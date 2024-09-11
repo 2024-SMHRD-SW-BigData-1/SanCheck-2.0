@@ -9,7 +9,9 @@ import 'package:sancheck/model/user_model.dart';
 import 'package:sancheck/screen/login_page.dart';
 import 'package:sancheck/screen/login_success.dart';
 import 'package:sancheck/service/auth_service.dart';
+import 'package:sancheck/service/medal_service.dart';
 import 'package:sancheck/service/mountain_service.dart';
+import 'package:sancheck/service/trail_service.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -21,6 +23,7 @@ class LoadingPage extends StatefulWidget {
 class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
   final AuthService _authService = AuthService(); // Create instance of AuthService
   final MountainService _mountainService = MountainService(); // MountainService 인스턴스 생성
+  final TrailService _trailService = TrailService();
 
   @override
   void initState() {
@@ -59,21 +62,31 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
     }
   }
 
+  Future<void> _selectAllTrails() async{
+    try {
+      List<dynamic> trails = await _trailService.fetchAllTrails();
+      allTrails = trails;
+    } catch (e) {
+      print("Error fetching fav mountains: $e");
+    }
+  }
+
+
+  Future<void> _selectFavMountain() async{
+    try {
+      List<dynamic> mountains = await _mountainService.searchFavMountain();
+      favMountains = mountains;
+    } catch (e) {
+      print("Error fetching fav mountains: $e");
+    }
+  }
+
   Future<void> _selectAllMountain() async {
     try {
       List<dynamic> mountains = await _mountainService.fetchAllMountains();
       allMountains = mountains;
     } catch (e) {
       print("Error fetching all mountains: $e");
-    }
-  }
-
-  Future<void> _selectFavMountain(String userId) async{
-    try {
-      List<dynamic> mountains = await _mountainService.searchFavMountain(userId);
-      favMountains = mountains;
-    } catch (e) {
-      print("Error fetching fav mountains: $e");
     }
   }
 
@@ -152,14 +165,15 @@ class _LoadingPageState extends State<LoadingPage> with WidgetsBindingObserver {
       userModel = user;
 
       await _selectAllMountain();
-      await _selectFavMountain(userModel!.userId); // 페이지 이동 전 관심있는 산 가져오기
+      await _selectFavMountain(); // 페이지 이동 전 관심있는 산 가져오기
+      // await _selectAllTrails();
       // print('favMountain : $favMountains');
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(builder: (_) => LoginSuccess(selectedIndex: 1)),
       );
     } else {
-      await _selectAllMountain();
+      // await _selectAllMountain();
       Navigator.pushReplacement(
           context, MaterialPageRoute(builder: (_) => LoginPage()));
     }

@@ -220,22 +220,4 @@ class _LoginPageState extends State<LoginPage> {
     }
   }
 
-
-  Future<void> _selectAllMountain() async {
-    try {
-      List<dynamic> mountains = await _mountainService.fetchAllMountains();
-      allMountains = mountains;
-    } catch (e) {
-      print("Error fetching all mountains: $e");
-    }
-  }
-
-  Future<void> _selectFavMountain(String userId) async{
-    try {
-      List<dynamic> mountains = await _mountainService.searchFavMountain(userId);
-      favMountains = mountains;
-    } catch (e) {
-      print("Error fetching fav mountains: $e");
-    }
-  }
 }

@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:sancheck/globals.dart';
 
 class MyMedal extends StatelessWidget {
   final List<Map<String, String>> medals = [
@@ -61,18 +63,31 @@ class MyMedal extends StatelessWidget {
                       mainAxisSpacing: 10,
                       childAspectRatio: 0.8, // 항목의 비율 조정
                     ),
-                    itemCount: medals.length,
+                    itemCount: allMedals?.length ?? 0,
                     itemBuilder: (context, index) {
-                      final medal = medals[index];
+
+                      final medal = allMedals?[index];
+                      // 이미지 경로 꺼내오기
+                      String rawImagePath = medal['stamp_img'];
+                      // 백슬래시를 슬래시로 변환
+                      String correctedImagePath = rawImagePath.replaceAll('\\', '/');
+                      // 서버 URL과 결합하여 최종 이미지 URL 생성
+                      String imageUrl = 'http://192.168.219.200:8000/medal/$correctedImagePath';
+
+                      // 문자열을 DateTime 객체로 변환
+                      DateTime dateTime = DateTime.parse(medal['stamp_date']);
+                      // 원하는 형식으로 변환
+                      String formattedDate = DateFormat('yyyy-MM-dd').format(dateTime);
+
                       return GestureDetector(
-                        onTap: () => _showImagePopup(context, medal['imageUrl']!),
+                        onTap: () => _showImagePopup(context, '${imageUrl}'),
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             ClipRRect(
                               borderRadius: BorderRadius.circular(12),
                               child: Image.network(
-                                medal['imageUrl']!,
+                                imageUrl,
                                 width: 100,
                                 height: 100,
                                 fit: BoxFit.cover,
@@ -81,7 +96,7 @@ class MyMedal extends StatelessWidget {
                             SizedBox(height: 8),
                             Flexible(
                               child: Text(
-                                medal['name']!,
+                                medal['stamp_name']!,
                                 style: TextStyle(
                                     fontSize: 14, // 텍스트 크기 조정
                                     fontWeight: FontWeight.bold),
@@ -91,7 +106,7 @@ class MyMedal extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              medal['date']!,
+                              formattedDate,
                               style: TextStyle(fontSize: 12, color: Colors.grey),
                             ),
                           ],

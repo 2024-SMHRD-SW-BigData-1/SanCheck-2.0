@@ -43,8 +43,8 @@ class MedalModal extends StatelessWidget {
                 borderRadius: BorderRadius.circular(12),
                 child: Image.network(
                   medalImageUrl.isNotEmpty ? medalImageUrl : 'https://default-image-url.com', // 기본 이미지 URL 설정
-                  width: 32,
-                  height: 32,
+                  width: 200,
+                  height: 200,
                   errorBuilder: (context, error, stackTrace) {
                     return Image.asset('assets/images/default_image.png', width: 32, height: 32); // 로컬 기본 이미지 설정
                   },

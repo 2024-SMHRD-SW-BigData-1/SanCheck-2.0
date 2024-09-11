@@ -12,7 +12,7 @@ import 'package:sancheck/provider/hike_provider.dart';
 import 'package:sancheck/screen/hike_map.dart';
 import 'package:sancheck/screen/hike_record.dart';
 import 'package:sancheck/screen/login_success.dart';
-import 'package:sancheck/service/flask_service.dart';
+import 'package:sancheck/service/hiking_service.dart';
 import 'package:shared_preferences/shared_preferences.dart';  // SharedPreferences 추가
 import 'package:image_picker/image_picker.dart'; // 이미지 픽커 추가
 import 'package:sancheck/screen/weather.dart';
@@ -25,6 +25,7 @@ late Stream<PedestrianStatus> _pedestrianStatusStream;
 int _initialSteps = 0;
 int _stepsOffset = 0;
 double _useCal = 0;
+double _useDist = 0;
 
 
 class Hike extends StatefulWidget {
@@ -236,8 +237,8 @@ class _TimerButtonsState extends State<TimerButtons> {
   // Timer? _timer;
   // SharedPreferences? _prefs;
   File? _capturedImage; // 촬영한 사진 저장 변수
-  FlaskService _flaskService = FlaskService();
   bool _isLoading = false;
+  HikingService _hikingService = HikingService();
 
   // 위도, 경도, LineString 배열 생성
   // List<double> loc_lst_lat = [];
@@ -254,7 +255,10 @@ class _TimerButtonsState extends State<TimerButtons> {
       // _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
       //print(hikeProvider.currentSteps);
       _useCal = hikeProvider.currentSteps * 70.0 * 0.0005;
+      _useDist = hikeProvider.currentSteps / 1000;
+
       hikeProvider.updateRoundedUseCal(double.parse(_useCal.toStringAsFixed(2)));
+      hikeProvider.updateRoundedDistance(double.parse(_useDist.toStringAsFixed(2)));
     }
   }
 
@@ -367,16 +371,19 @@ class _TimerButtonsState extends State<TimerButtons> {
     print("lineStirng : $linestring");
 
     print("trail_idx : ${selectedTrail ?? '선택된 등산로 없음'}");
+    print(selectedMountain?["mount_name"] ?? '선택된 산 없음');
 
     try {
       Response res = await dio.post(url, data: {
         "user_id": user_id,
+        "mount_name" : selectedMountain?["mount_name"],
         "trail_idx": selectedTrail?["trail_idx"],
         "hiking_date": DateTime.now().toIso8601String(),
         "hiking_steps": hikeProvider.currentSteps,
         "hiking_state": 1,
         "hiking_time": hikeProvider.secondNotifier,
-        "hiking_route": linestring
+        "hiking_route": linestring,
+        "hiking_dist" : hikeProvider.roundedDistance
       });
 
       print(res.statusCode);
@@ -774,10 +781,10 @@ class _TimerButtonsState extends State<TimerButtons> {
         _capturedImage = File(pickedFile.path);
       });
       // 조건 체크 후 메달 모달 띄우기
-      bool isSuccess =  await _flaskService.sendImageToFlask(_capturedImage!);
+      Map<String, dynamic> res =  await _hikingService.sendImageToFlask(_capturedImage!);
 
-      if (isSuccess) {
-        _showMedalModal(); // 조건 일치하면 메달 제작 로직
+      if (res['success']) {
+        _showMedalModal(res['url']); // 조건 일치하면 메달 제작 로직
       } else {
         _againPhotoOptionModal(); // 조건을 만족하지 않으면 다시 사진 찍을건지 물어보기
       }
@@ -788,12 +795,12 @@ class _TimerButtonsState extends State<TimerButtons> {
 
 
   // 메달 모달을 닫으면 등산 기록 모달을 호출
-  void _showMedalModal() {
+  void _showMedalModal(String url) {
     showDialog(
       context: context,
       builder: (BuildContext context) {
         return MedalModal(
-          medalImageUrl: 'https://example.com/medal.png',
+          medalImageUrl: url,
         );
       },
     ).then((_) {
@@ -837,6 +844,7 @@ class _TimerButtonsState extends State<TimerButtons> {
     hikeProvider.resetSecond();
     hikeProvider.resetCurrentSteps();
     hikeProvider.resetRoundedUseCal();
+    hikeProvider.resetRoundedDistance();
     hikeProvider.reset_route();
   }
 

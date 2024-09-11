@@ -11,5 +11,8 @@ List<dynamic>? favMountains;
 Map<String,dynamic>? selectedMountain;
 Map<String,dynamic>? selectedTrail;
 List<dynamic>? selectedSpots;
+List<dynamic>? allMedals;
+List<dynamic>? allHikingResults;
+List<dynamic>? allTrails;
 //int? selectedTrailIdx;
 //List<dynamic>? selectedTrailPath;

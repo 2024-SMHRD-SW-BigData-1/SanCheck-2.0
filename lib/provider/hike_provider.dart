@@ -10,7 +10,8 @@ class HikeProvider with ChangeNotifier {
   bool _isPaused = true;
   int _secondNotifier = 0;
   int _currentSteps = 0;
-  double _roundedUseCal = 0;
+  double _roundedUseCal = 0.0;
+  double _roundedDistance = 0.00;
   List<double> _loc_lst_lat = [];
   List<double> _loc_lst_lon = [];
   List<double> _loc_lst = [];
@@ -21,6 +22,7 @@ class HikeProvider with ChangeNotifier {
   int get secondNotifier => _secondNotifier;
   int get currentSteps => _currentSteps;
   double get roundedUseCal => _roundedUseCal;
+  double get roundedDistance => _roundedDistance;
   List<double> get loc_lst_lat => _loc_lst_lat;
   List<double> get loc_lst_lon => _loc_lst_lon;
   List<double> get loc_lst => _loc_lst;
@@ -126,6 +128,11 @@ class HikeProvider with ChangeNotifier {
     notifyListeners();
   }
 
+  void updateRoundedDistance (double dist) {
+    _roundedDistance = dist;
+    notifyListeners();
+  }
+
 
 
   void resetTracking() {
@@ -149,7 +156,12 @@ class HikeProvider with ChangeNotifier {
   }
 
   void resetRoundedUseCal() {
-    _roundedUseCal = 0; // 상태 초기화
+    _roundedUseCal = 0.0; // 상태 초기화
+    notifyListeners(); // 상태 변화 알림
+  }
+
+  void resetRoundedDistance() {
+    _roundedDistance = 0.00; // 상태 초기화
     notifyListeners(); // 상태 변화 알림
   }
 
@@ -158,6 +170,7 @@ class HikeProvider with ChangeNotifier {
     _loc_lst_lon = [];
     _loc_lst = [];
     _combinedString = "";
+    notifyListeners();
   }
 
 }
