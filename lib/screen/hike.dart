@@ -234,6 +234,7 @@ class _TimerButtonsState extends State<TimerButtons> {
   static const pauseIconUrl = 'https://img.icons8.com/ios-filled/100/40C057/circled-pause.png';
   static const playIconUrl = 'https://img.icons8.com/ios-glyphs/90/40C057/circled-play.png';
   static const stopIconUrl = 'https://img.icons8.com/ios-filled/100/FA5252/stop-circled.png';
+
   // Timer? _timer;
   // SharedPreferences? _prefs;
   File? _capturedImage; // 촬영한 사진 저장 변수
@@ -248,8 +249,9 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   void onStepCount(StepCount event) {
     final hikeProvider = Provider.of<HikeProvider>(context, listen: false);
-    if(!hikeProvider.isPaused){
-      hikeProvider.updateCurrentSteps(event.steps - _initialSteps - _stepsOffset);
+    if (!hikeProvider.isPaused) {
+      hikeProvider.updateCurrentSteps(
+          event.steps - _initialSteps - _stepsOffset);
 
       //print("걸음 수 측정");
       // _currentSteps = event.steps - _initialSteps - _stepsOffset; // 오프셋을 고려한 걸음 수 계산
@@ -288,9 +290,6 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
 
-
-
-
   // // 현재 위치를 리스트에 추가
   // void get_route() async{
   //   Location _location = Location();
@@ -314,12 +313,10 @@ class _TimerButtonsState extends State<TimerButtons> {
   // }
 
 
-
   // void reset_route(){
   //   loc_lst_lat.clear();
   //   loc_lst_lon.clear();
   // }
-
 
 
   // String combinedString = "";
@@ -342,8 +339,6 @@ class _TimerButtonsState extends State<TimerButtons> {
   //   }).where((element) => element != null).join(', ');
   //
   // }
-
-
 
 
   // 저장된 lineStiring 형태의 경로를 DB에 업로드
@@ -393,7 +388,6 @@ class _TimerButtonsState extends State<TimerButtons> {
         _isLoading = false;
       });
       return res.data['success'];
-
     } catch (e) {
       setState(() {
         _isLoading = false;
@@ -519,9 +513,9 @@ class _TimerButtonsState extends State<TimerButtons> {
                       Navigator.of(context).pop();
                       bool isSuccess = await save_route();
 
-                      if(isSuccess){
+                      if (isSuccess) {
                         _showPhotoOptionModal(); // 사진 촬영 여부 묻는 모달 호출
-                      }else{
+                      } else {
                         _showFailedModal(); // 실패 시 실패창
                       }
                     },
@@ -552,9 +546,9 @@ class _TimerButtonsState extends State<TimerButtons> {
             child: Text(
               '서버 통신 실패',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.red
+                  fontWeight: FontWeight.bold,
+                  fontSize: 20,
+                  color: Colors.red
               ),
             ),
           ),
@@ -582,7 +576,8 @@ class _TimerButtonsState extends State<TimerButtons> {
                       Navigator.of(context).pop();
                       Navigator.of(context).pushReplacement(
                         MaterialPageRoute(
-                          builder: (context) => LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
+                          builder: (context) =>
+                              LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
                         ),
                       );
                       _resetTimer();
@@ -696,9 +691,9 @@ class _TimerButtonsState extends State<TimerButtons> {
             child: Text(
               '정상석과 일치하는 산이 없습니다.',
               style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 17,
-                color: Colors.red
+                  fontWeight: FontWeight.bold,
+                  fontSize: 17,
+                  color: Colors.red
 
               ),
             ),
@@ -824,7 +819,8 @@ class _TimerButtonsState extends State<TimerButtons> {
       } else {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(
-            builder: (context) => LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
+            builder: (context) =>
+                LoginSuccess(selectedIndex: 0), // 등산하기 페이지로 돌아가기
           ),
         );
         _resetTimer();
@@ -833,7 +829,7 @@ class _TimerButtonsState extends State<TimerButtons> {
   }
 
   // 타이머 초기화
-  void _resetTimer() async{
+  void _resetTimer() async {
     // Provider에서 HikeProvider 인스턴스를 가져옵니다.
     final hikeProvider = context.read<HikeProvider>();
 
@@ -865,7 +861,7 @@ class _TimerButtonsState extends State<TimerButtons> {
 
   @override
   Widget build(BuildContext context) {
-    if(_isLoading){
+    if (_isLoading) {
       return AlertDialog(
         backgroundColor: Colors.white,
         shape: RoundedRectangleBorder(
@@ -875,13 +871,15 @@ class _TimerButtonsState extends State<TimerButtons> {
           child: Text(
             '서버 통신 중...',
             style: TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                color: Colors.red
+              fontWeight: FontWeight.bold,
+              fontSize: 20,
+              color: Colors.red,
             ),
           ),
         ),
-        content: SizedBox(height: 400 , child: CircularProgressIndicator()),
+        // CircularProgressIndicator 제거된 부분
+        content: SizedBox(
+            height: 100, child: Center(child: Text('잠시만 기다려 주세요'))),
       );
     }
 
@@ -900,7 +898,7 @@ class _TimerButtonsState extends State<TimerButtons> {
                 width: 48,
                 height: 48,
               ),
-              onPressed: (){
+              onPressed: () {
                 hikeProvider.toggleTracking();
                 hikeProvider.startTimer();
               },
@@ -916,9 +914,9 @@ class _TimerButtonsState extends State<TimerButtons> {
                   ),
                   onPressed: () {
                     if (hikeProvider.isPaused) {
-                        hikeProvider.startTimer();
+                      hikeProvider.startTimer();
                     } else {
-                        hikeProvider.pauseTimer();
+                      hikeProvider.pauseTimer();
                     }
                   },
                 ),
